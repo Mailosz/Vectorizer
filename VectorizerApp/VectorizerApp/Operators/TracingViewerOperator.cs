@@ -21,6 +21,10 @@ namespace VectorizerApp.Operators
 		List<Color> colorvalues;
 
 		int width, height;
+		CanvasStrokeStyle hairline = new CanvasStrokeStyle()
+		{
+			TransformBehavior = CanvasStrokeTransformBehavior.Hairline
+		};
 
 		public TracingViewerOperator(Viewer viewer, Context context)
 		{
@@ -32,6 +36,7 @@ namespace VectorizerApp.Operators
 		public void Initialize()
 		{
 			Context.Vectorizer.Trace();
+			Context.TracingResult = Context.Vectorizer.TracingResult;
 
 			colorvalues = new List<Color>()
 			{
@@ -66,11 +71,11 @@ namespace VectorizerApp.Operators
 
 		public void Draw(DrawingArgs args)
 		{
-			args.Session.DrawImage(Context.OriginalBitmap);
+			args.Session.DrawImage(Context.OriginalBitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
 			int i = 0;
 			foreach (var g in geometries)
 			{
-				args.Session.DrawGeometry(g, colorvalues[i % colorvalues.Count]);
+				args.Session.DrawGeometry(g, colorvalues[i % colorvalues.Count], 1, hairline);
 				i++;
 			}
 		}

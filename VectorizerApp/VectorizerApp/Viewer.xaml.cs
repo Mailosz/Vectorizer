@@ -61,6 +61,10 @@ namespace VectorizerApp
 			canvas.Height = size.Height;
 		}
 
-
+		private void scrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+		{
+			canvas.Invalidate();
+			canvas.DpiScale = scrollViewer.ZoomFactor;
+		}
 	}
 }

@@ -65,7 +65,7 @@ namespace VectorizerApp.Operators
 
 		public void Draw(DrawingArgs args)
 		{
-			args.Session.DrawImage(bitmap);
+			args.Session.DrawImage(bitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, bitmap.SizeInPixels.Width, bitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
 		}
 	}
 }

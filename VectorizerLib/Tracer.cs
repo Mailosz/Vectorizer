@@ -30,6 +30,11 @@ namespace VectorizerLib
 		public ushort Right { get; set; }
 		public ArrowParams Params { get; set; }
 		public TracedNode Node { get; set; }
+
+		public override string ToString()
+		{
+			return "{" + X.ToString() + ", " + Y.ToString() + "}";
+		}
 	}
 
 	[Flags]
@@ -142,6 +147,8 @@ namespace VectorizerLib
 			edge.Points = pointsList.ToArray();
 			edge.End = arrow.Node;
 
+			pointsList.Clear();
+
 			return edge;
 
 			//
@@ -157,7 +164,7 @@ namespace VectorizerLib
 			{
 				allEdges.Add(edge);
 
-				//TODO: we are retrieving region twice - here, and at the end of the 
+				//TODO: we are retrieving region twice - here, and at the end of the (are we? i dont remember whether i fixed it, check)
 				TracedRegion leftregion, rightregion;
 				TracedNode node;
 				bool nnodecreated = false;
@@ -213,7 +220,7 @@ namespace VectorizerLib
 				}
 
 				node.Edges.Add(edge);
-
+				arrow.Node = node;
 
 				return nnodecreated;
 
@@ -524,8 +531,11 @@ namespace VectorizerLib
 								}
 								else // change on the left
 								{
-									addLeftwardArrow();
-									addForwardArrow();
+									if (finishEdgeWithNode(arrow))
+									{
+										addLeftwardArrow();
+										addForwardArrow();
+									}
 									return false;
 								}
 							}

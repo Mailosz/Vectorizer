@@ -10,22 +10,22 @@ namespace VectorizerApp.Operators
 	class BitmapViewerOperator : IViewerOperator
 	{
 		Viewer viewer;
-		internal CanvasBitmap bitmap;
+		public Context Context;
 
-		public BitmapViewerOperator(Viewer viewer, CanvasBitmap bitmap)
+		public BitmapViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
-			this.bitmap = bitmap;
+			this.Context = context;
 		}
 
 		public void Initialize()
 		{
-			viewer.SetSize(bitmap.Size);
+			viewer.SetSize(Context.OriginalBitmap.Size);
 		}
 
 		public void Draw(DrawingArgs args)
 		{
-			args.Session.DrawImage(bitmap, 0f, 0f, new Windows.Foundation.Rect(0,0,bitmap.SizeInPixels.Width, bitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
+			args.Session.DrawImage(Context.OriginalBitmap, 0f, 0f, new Windows.Foundation.Rect(0,0, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
 		}
 	}
 }

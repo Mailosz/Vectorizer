@@ -32,12 +32,6 @@ namespace VectorizerApp
 
 		IViewerOperator currentOperator;
 
-		VectorizerProperties properties = new VectorizerProperties()
-		{
-			RegionizationTreshold = 0.1f,
-			RegionizationMinimumSteps = 10,
-			RegionizationMaximumSteps = 100,
-		};
 
 		public MainWindow()
 		{
@@ -78,9 +72,22 @@ namespace VectorizerApp
 			{
 				var bitmap = await CanvasBitmap.LoadAsync(viewer.Device, await file.OpenAsync(Windows.Storage.FileAccessMode.Read));
 
-				BitmapViewerOperator op = new BitmapViewerOperator(viewer, bitmap);
-				openNewViewerOperator(op);
+				openNewImage(bitmap);
 			}
+		}
+
+		public void openNewImage(CanvasBitmap bitmap)
+		{
+			Context context = new Context();
+			context.OriginalBitmap = bitmap;
+			context.Properties = new VectorizerProperties()
+			{
+				RegionizationTreshold = 0.1f,
+				RegionizationMinimumSteps = 10,
+				RegionizationMaximumSteps = 100,
+			};
+			BitmapViewerOperator op = new BitmapViewerOperator(viewer, context);
+			openNewViewerOperator(op);
 		}
 
 		private void openNewViewerOperator(IViewerOperator newOperator)
@@ -98,17 +105,17 @@ namespace VectorizerApp
 		{
 			if (currentOperator is BitmapViewerOperator bvo)
 			{
-				var bytes = bvo.bitmap.GetPixelBytes();
+				var oper = new RegionsViewerOperator(viewer, bvo.Context);
 
-				RgbaByteSource source = new RgbaByteSource(bytes, (int)bvo.bitmap.SizeInPixels.Width);
+				openNewViewerOperator(oper);
+			}
+		}
 
-				Vectorizer<RgbaByteRegionData> vectorizer = new Vectorizer<RgbaByteRegionData>();
-				vectorizer.Source = source;
-				vectorizer.Properties = properties;
-				vectorizer.Regionize();
-				var board = vectorizer.RegionizationResult.Board;
-
-				var oper = new RegionsViewerOperator(viewer, board, source.Width, source.Height);
+		private void traceButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (currentOperator is RegionsViewerOperator rvo)
+			{
+				var oper = new TracingViewerOperator(viewer, rvo.Context);
 
 				openNewViewerOperator(oper);
 			}

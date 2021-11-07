@@ -1,8 +1,10 @@
 ﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using VectorizerLib;
@@ -10,38 +12,28 @@ using Windows.UI;
 
 namespace VectorizerApp.Operators
 {
-	class RegionsViewerOperator : IViewerOperator
+	class TracingViewerOperator : IViewerOperator
 	{
-		Viewer viewer;
 		public Context Context;
-		internal ushort[] board;
-		CanvasBitmap bitmap;
+
+		Viewer viewer;
+		List<CanvasGeometry> geometries;
+		List<Color> colorvalues;
 
 		int width, height;
 
-		public RegionsViewerOperator(Viewer viewer, Context context)
+		public TracingViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
+
 			Context = context;
-
-			var bytes = context.OriginalBitmap.GetPixelBytes();
-
-			RgbaByteSource source = new RgbaByteSource(bytes, (int)context.OriginalBitmap.SizeInPixels.Width);
-
-			Vectorizer<RgbaByteRegionData> vectorizer = new Vectorizer<RgbaByteRegionData>();
-			vectorizer.Source = source;
-			vectorizer.Properties = context.Properties;
-			vectorizer.Regionize();
-			Context.Vectorizer = vectorizer;
-			this.board = vectorizer.RegionizationResult.Board;
-
-			this.width = source.Width;
-			this.height = source.Height;
 		}
 
 		public void Initialize()
 		{
-			List<Color> colorvalues = new List<Color>()
+			Context.Vectorizer.Trace();
+
+			colorvalues = new List<Color>()
 			{
 				Colors.AliceBlue, Colors.AntiqueWhite, Colors.Aqua, Colors.Aquamarine, Colors.Azure, Colors.Beige, Colors.Bisque, Colors.Black, Colors.BlanchedAlmond, Colors.Blue,
 				Colors.BlueViolet, Colors.Brown, Colors.BurlyWood, Colors.CadetBlue, Colors.Chartreuse, Colors.Chocolate, Colors.Coral, Colors.CornflowerBlue, Colors.Cornsilk,
@@ -50,22 +42,37 @@ namespace VectorizerApp.Operators
 				Colors.DarkTurquoise, Colors.DarkViolet, Colors.DeepPink, Colors.DeepSkyBlue, Colors.DimGray, Colors.DodgerBlue, Colors.Firebrick, Colors.FloralWhite, Colors.ForestGreen
 			};
 
-			Color[] colors = new Color[board.Length];
-			for (int i = 0; i < board.Length; i++)
+			geometries = new List<CanvasGeometry>(Context.TracingResult.Edges.Count);
+			foreach (var edge in Context.TracingResult.Edges)
 			{
-				colors[i] = colorvalues[board[i] % colorvalues.Count];
+				CanvasPathBuilder cpb = new CanvasPathBuilder(viewer.Device);
+
+				cpb.BeginFigure(new Vector2(edge.Start.X, edge.Start.Y));
+				for (int a = 0; a < edge.Points.Length; a++)
+				{
+					cpb.AddLine(edge.Points[a]);
+				}
+				cpb.AddLine(new Vector2(edge.End.X, edge.End.Y));
+				cpb.EndFigure(CanvasFigureLoop.Open);
+
+				CanvasGeometry g = CanvasGeometry.CreatePath(cpb);
+				geometries.Add(g);
 			}
 
-			bitmap = CanvasBitmap.CreateFromColors(viewer.Device, colors, width, height);
 
-			Context.RegionsImage = bitmap;
 
-			viewer.SetSize(bitmap.Size);
+			viewer.SetSize(Context.OriginalBitmap.Size);
 		}
 
 		public void Draw(DrawingArgs args)
 		{
-			args.Session.DrawImage(bitmap);
+			args.Session.DrawImage(Context.OriginalBitmap);
+			int i = 0;
+			foreach (var g in geometries)
+			{
+				args.Session.DrawGeometry(g, colorvalues[i % colorvalues.Count]);
+				i++;
+			}
 		}
 	}
 }

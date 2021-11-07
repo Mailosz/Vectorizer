@@ -46,7 +46,7 @@ namespace VectorizerLib
 			regions = posterizer.Regionize();
 		}
 
-		private void Trace()
+		public void Trace()
 		{
 			Tracer posterizer = new Tracer()
 			{

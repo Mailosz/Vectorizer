@@ -9,13 +9,13 @@
     mc:Ignorable="d">
 
     <Grid>
-        <ScrollViewer ZoomMode="Enabled" MaxZoomFactor="10" MinZoomFactor="0.1" VerticalScrollMode="Enabled" HorizontalScrollMode="Enabled" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-            <Border BorderThickness="1" BorderBrush="Gray" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <ScrollViewer ZoomMode="Enabled" MaxZoomFactor="10" MinZoomFactor="0.1" VerticalScrollMode="Enabled" HorizontalScrollMode="Enabled" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" HorizontalScrollBarVisibility="Visible">
+            <Border BorderThickness="1" BorderBrush="Gray">
                 <!--<g:CanvasVirtualControl x:Name="canvas" Width="256" Height="256"
                                     CreateResources="canvas_CreateResources" RegionsInvalidated="canvas_RegionsInvalidated"
                                     
                 />-->
-                <g:CanvasControl x:Name="canvas" Width="256" Height="256"
+                <g:CanvasControl x:Name="canvas" Width="256" Height="256" MaxWidth="10000"
                                     Draw="canvas_Draw"
                                     
                 />

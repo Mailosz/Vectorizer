@@ -15,6 +15,7 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Button x:Name="loadButton" Click="loadButton_Click" Margin="8,4">Otwórz</Button>
             <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
+            <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
         </StackPanel>
         
         <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1"/>

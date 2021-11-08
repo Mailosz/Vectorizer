@@ -203,11 +203,24 @@ namespace VectorizerLib
 			else
 			{
 				rAbove.ComputeValues();
+				finishRegion(rAbove);
 				rBelow.ComputeValues();
+				finishRegion(rBelow);
 			}
 
 
 			removeRegion(region);
+
+			void finishRegion(RegionData rdata)
+			{
+				if (rdata.X2 < rdata.X1) rdata.X2 = rdata.X1;
+				if (rdata.Y2 < rdata.Y1) rdata.Y2 = rdata.Y1;
+
+				rdata.X1 += region.X1;
+				rdata.X2 += region.X1;
+				rdata.Y1 += region.Y1;
+				rdata.Y2 += region.Y1;
+			}
 		}
 
 
@@ -223,7 +236,7 @@ namespace VectorizerLib
 			RegionData region = source.CreateRegionData();
 			region.Id = lastId;
 			// TODO: CAUTION, TESTS
-			region.X1 = 0; region.Y1 = 0; region.X2 = source.Width - 1; region.Y2 = source.Height - 1;
+			region.X1 = int.MaxValue; region.Y1 = int.MaxValue; region.X2 = 0; region.Y2 = 0;
 			//
 			regionsArray[lastId] = region;
 			regionsList.Add(region);
@@ -236,5 +249,14 @@ namespace VectorizerLib
 			regionsList.Remove(region);
 		}
 
+
+		//
+		// flood fill
+		//
+
+		private void regionFill(RegionData region)
+		{
+
+		}
 	}
 }

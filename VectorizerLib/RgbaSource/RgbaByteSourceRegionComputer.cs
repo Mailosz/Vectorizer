@@ -46,6 +46,10 @@ namespace VectorizerLib
 			//for (int i = 0; i < 4; i++) { region.cov2[i,0] += source.bitmap[iterator + i] * source.bitmap[iterator + i]; }
 
 			region.area++;
+			if (region.X1 > coli) region.X1 = coli;
+			else if (region.X2 < coli) region.X2 = coli;
+			if (region.Y1 > rowi) region.Y1 = rowi;
+			else if (region.Y2 < rowi) region.Y2 = rowi;
 		}
 
 		public int GetPosition()
@@ -78,9 +82,9 @@ namespace VectorizerLib
 			//number of pixels to skip on the end of a row
 			w = rd.X2 - rd.X1 + 1;
 			h = rd.Y2 - rd.Y1 + 1;
-			rowoffset = source.Width - w;
+			rowoffset = source.Width - w + 1;
 
-			pixel = rd.Y1 * source.onerow + rd.X1;
+			pixel = rd.Y1 * source.Width + rd.X1;
 			iterator = pixel * 4;
 			coli = 0;
 			rowi = 0;

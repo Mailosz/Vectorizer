@@ -31,11 +31,18 @@ namespace VectorizerApp
 		List<IViewerOperator> history = new List<IViewerOperator>();
 
 		IViewerOperator currentOperator;
-
+		private VectorizerProperties properties;
 
 		public MainWindow()
 		{
 			this.InitializeComponent();
+
+			properties = new VectorizerProperties()
+			{
+				RegionizationTreshold = 0.1f,
+				RegionizationMinimumSteps = 10,
+				RegionizationMaximumSteps = 100,
+			};
 		}
 
 
@@ -80,12 +87,7 @@ namespace VectorizerApp
 		{
 			Context context = new Context();
 			context.OriginalBitmap = bitmap;
-			context.Properties = new VectorizerProperties()
-			{
-				RegionizationTreshold = 0.1f,
-				RegionizationMinimumSteps = 10,
-				RegionizationMaximumSteps = 100,
-			};
+			context.Properties = properties;
 			BitmapViewerOperator op = new BitmapViewerOperator(viewer, context);
 			openNewViewerOperator(op);
 		}

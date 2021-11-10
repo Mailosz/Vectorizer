@@ -19,6 +19,7 @@ namespace VectorizerLib
 		int GetPosition();
 		bool Next();
 		void AppendCurrentPixelValuesToRegionData(D computer);
+		void AppendPixelLocation(D computer)
 		PixelValue CheckCurrentPixel(D computer);
 	}
 

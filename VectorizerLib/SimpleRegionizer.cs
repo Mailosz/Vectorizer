@@ -7,8 +7,40 @@ using System.Threading.Tasks;
 
 namespace VectorizerLib
 {
+	public interface IRegionData
+	{
+		ushort Id { get; set;}
+		int X1 { get; set; }
+		int X2 { get; set; }
+		int Y1 { get; set; }
+		int Y2 { get; set; }
+		long Area { get; set; }
+		double SplitValue { get; }
+		bool IsFinal { get; set; }
 
-	class Regionizer<RegionData> where RegionData : class, IRegionData
+		void ComputeValues();
+	}
+
+	public abstract class RegionDataBase : IRegionData
+	{
+		ushort id;
+		public ushort Id { get => id; set { id = value; } } 
+		protected int x1, y1, x2, y2;
+		public int X1 { get => x1; set { x1 = value; } }
+		public int X2 { get => x2; set { x2 = value; } }
+		public int Y1 { get => y1; set { y1 = value; } }
+		public int Y2 { get => y2; set { y2 = value; } }
+
+		internal long area;
+		public long Area { get => area; set { area = value; } }
+		public double SplitValue { get; protected set; }
+
+		public bool IsFinal { get; set; }
+
+		public abstract void ComputeValues();
+	}
+
+	class SimpleRegionizer<RegionData> where RegionData : class, IRegionData
 	{
 		VectorizerProperties properties;
 		public VectorizerProperties Properties { get => properties; set { properties = value; } }
@@ -146,7 +178,7 @@ namespace VectorizerLib
 					switch (iterator.CheckCurrentPixel(region))
 					{
 						case PixelValue.Above:
-							//iterator.AppendCurrentPixelValuesToRegionData(rAbove);
+							iterator.AppendCurrentPixelValuesToRegionData(rAbove);
 							board[iterator.GetPosition()] = rAbove.Id;
 							break;
 						case PixelValue.Below:
@@ -219,259 +251,6 @@ namespace VectorizerLib
 			regionsArray[region.Id] = null;
 			regionsList.Remove(region);
 		}
-
-
-		//
-		// flood fill
-		//
-
-		class FloodFiller
-		{
-			public RegionData Region { get; set; }
-			public Queue<Seed> Seeds { get; set; }
-			public int SearchPos { get; set; }
-		}
-
-		struct Seed
-		{
-			public int Start { get; set; }
-			public int End { get; set; }
-		}
-
-		class FloodRegionData
-		{
-			public RegionData Region { get; set; }
-		}
-
-
-		private void regionFill(RegionData region)
-		{
-			FloodFiller ff = new FloodFiller()
-			{
-				Region = region,
-				Seeds = new Queue<Seed>(region.Y2 - region.Y1 + 5)
-			};
-
-			int end = region.Y2 * width + region.X2;
-			int start = region.Y1 * width + region.X1;
-			int rw = region.X2 - region.X1 + 1;
-
-			int lineEnd = start + rw;
-			int searchpos = start;
-
-			List<FloodRegionData> nRegions = new List<FloodRegionData>(16);
-			Queue<Seed> seeds = new Queue<Seed>(region.Y2 - region.Y1 + 5);
-
-			while (findBeginning())
-			{
-				int seedstart = searchpos;
-				//creating new region
-				FloodRegionData frd = new FloodRegionData()
-				{
-					Region = createRegion(),
-				};
-				nRegions.Add(frd);
-				board[searchpos] = frd.Region.Id;
-
-				//selecting first line
-				for (searchpos++; searchpos < lineEnd; searchpos++)
-				{
-					if (board[searchpos] == region.Id)
-					{
-						paintPixel(searchpos, frd);
-					}
-					else
-					{
-						
-						break;
-					}
-				}
-				//creating first seed
-				addSeed(seedstart, searchpos, 1);
-
-				while (seeds.TryDequeue(out Seed seed))
-				{
-					processSeed(seed, frd);
-				}
-
-				//next pixel
-				searchpos++;
-			}
-
-			//
-			// inline methods
-			//
-			void paintPixel(int pos, FloodRegionData frd)
-			{
-				board[pos] = frd.Region.Id;
-				frd.Region.Area++;
-			}
-
-			bool findBeginning()
-			{
-				while (true)
-				{
-					if (searchpos >= lineEnd)
-					{
-						//new line
-						start += width;
-						if (start > end)
-						{
-							return false;
-						}
-						searchpos = start;
-						lineEnd = start + rw;
-						continue;
-					}
-
-					if (board[searchpos] == region.Id)
-					{
-						return true;
-					}
-
-					searchpos++;
-				}
-
-			}
-
-			void addSeed(int seedstart, int seedend, int direction){
-				Seed seed;
-				if (direction == 1)
-				{
-					seedstart += width;
-					seedend += width;
-					if (seedend > end) // out of bounds
-					{
-						return;
-					}
-					seed = new Seed()
-					{
-						Start = seedstart,
-						End = seedend,
-					};
-				} 
-				else
-				{
-					seedstart -= width;
-					seedend -= width;
-					if (seedstart < start) // out of bounds
-					{
-						return;
-					}
-					seed = new Seed()
-					{
-						Start = seedstart,
-						End = seedend * -1,
-					};
-				}
-				seeds.Enqueue(seed);
-			}
-
-			void processSeed(Seed seed, FloodRegionData frd)
-			{
-				int direction = Math.Sign(seed.End);
-				int seedend = Math.Abs(seed.End);
-				int minimum = seed.Start % width;
-
-				int pos, seedstart;
-				if (board[seed.Start] == region.Id)
-				{
-					paintPixel(seed.Start, frd);
-					//left side
-					pos = seed.Start - 1;
-					while (pos >= minimum)
-					{
-						if (board[pos] == region.Id)
-						{
-							paintPixel(pos, frd);
-						}
-						else
-						{
-							break;
-						}
-						pos--;
-					}
-					seedstart = pos + 1;
-					//
-					if (seedstart < seed.Start - 1)
-					{
-						addSeed(seedstart, seed.Start - 1, direction * -1);
-					}
-					pos = seed.Start + 1;
-				}
-				else
-				{
-					pos = seed.Start + 1;
-					while (true)
-					{
-						if (pos >= seedend)
-						{
-							// no pixels to fill - dead end
-							return;
-						}
-						if (board[pos] == region.Id)
-						{
-							paintPixel(pos, frd);
-							seedstart = pos;
-							pos++;
-							break;
-						}
-						pos++;
-					}
-				}
-				
-				//inside
-				while (pos < seedend)
-				{
-					if (board[pos] == region.Id)
-					{
-						paintPixel(pos, frd);
-					}
-					else
-					{
-						addSeed(seedstart, pos - 1, direction);
-						while (true)
-						{
-							pos++;
-							if (pos >= seedend)
-							{
-								//that's all in this line
-								return;
-							}
-							if (board[pos] == region.Id)
-							{
-								seedstart = pos;
-								paintPixel(pos, frd);
-								break;
-							}
-						}
-					}
-					pos++;
-				}
-
-				//right side
-				int maximum = minimum + width;
-				while (pos < maximum)
-				{
-					if (board[pos] == region.Id)
-					{
-						paintPixel(pos, frd);
-					}
-					else
-					{
-						addSeed(seedstart, pos - 1, direction);
-						if (pos > seedend + 1)
-						{
-							addSeed(seedend + 1, pos, direction * -1);
-						}
-					}
-				}
-
-
-			}
-		}
-
-
 
 
 	}

@@ -45,6 +45,12 @@ namespace VectorizerLib
 			//v2
 			//for (int i = 0; i < 4; i++) { region.cov2[i,0] += source.bitmap[iterator + i] * source.bitmap[iterator + i]; }
 
+
+		}
+
+
+		public void AppendPixelLocation(RgbaByteRegionData computer)
+		{
 			region.area++;
 			if (region.X1 > coli) region.X1 = coli;
 			else if (region.X2 < coli) region.X2 = coli;
@@ -108,5 +114,6 @@ namespace VectorizerLib
 				return PixelValue.Below;
 			}
 		}
+
 	}
 }

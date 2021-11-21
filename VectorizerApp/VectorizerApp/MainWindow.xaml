@@ -12,12 +12,24 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="100" Orientation="Horizontal">
             <Button x:Name="loadButton" Click="loadButton_Click" Margin="8,4">Otwórz</Button>
+            <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">Cofnij</Button>
             <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
             <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
         </StackPanel>
         
-        <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1"/>
+        <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1" Grid.ColumnSpan="100"/>
+
+        <Border Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10" Padding="10,0" CornerRadius="10" Background="Beige" BorderBrush="Black" BorderThickness="1">
+            <ScrollViewer x:Name="rightPanel">
+                
+            </ScrollViewer>
+        </Border>
     </Grid>
 </Window>

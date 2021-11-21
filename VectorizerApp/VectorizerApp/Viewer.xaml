@@ -16,7 +16,10 @@
                                     
                 />-->
                 <g:CanvasControl x:Name="canvas" Width="256" Height="256" MaxWidth="10000"
-                                    Draw="canvas_Draw"
+                                 Draw="canvas_Draw"
+                                 PointerPressed="canvas_PointerPressed"
+                                 PointerMoved="canvas_PointerMoved"
+                                 PointerReleased="canvas_PointerReleased"
                                     
                 />
             </Border>

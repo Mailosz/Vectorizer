@@ -18,9 +18,10 @@ namespace VectorizerLib
 		void ResetIterator(D region);
 		int GetPosition();
 		bool Next();
-		void AppendCurrentPixelValuesToRegionData(D computer);
-		void AppendPixelLocation(D computer)
-		PixelValue CheckCurrentPixel(D computer);
+		void AppendCurrentPixelValuesToRegionData(D region);
+		void AppendPixelValuesToRegionData(D region, int pixel);
+		void AppendPixelLocation(D region);
+		PixelValue CheckCurrentPixel(D region);
 	}
 
 	internal enum PixelValue { Above, Below}

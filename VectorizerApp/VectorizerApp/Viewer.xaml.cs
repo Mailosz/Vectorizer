@@ -25,6 +25,12 @@ namespace VectorizerApp
 		public delegate void DrawEventArgs(Viewer sender, CanvasDrawingSession ds);
 		public event DrawEventArgs Draw;
 
+		public delegate void PointerEventArgs(UIElement sender, PointerRoutedEventArgs e);
+		public new event PointerEventArgs PointerMoved;
+		public new event PointerEventArgs PointerPressed;
+		public new event PointerEventArgs PointerReleased;
+
+
 		public CanvasDevice Device { get => canvas.Device; }
 
 		public Viewer()
@@ -65,6 +71,21 @@ namespace VectorizerApp
 		{
 			canvas.Invalidate();
 			canvas.DpiScale = scrollViewer.ZoomFactor;
+		}
+
+		private void canvas_PointerPressed(object sender, PointerRoutedEventArgs e)
+		{
+			PointerPressed?.Invoke((UIElement)sender, e);
+		}
+
+		private void canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
+		{
+			PointerMoved?.Invoke((UIElement)sender, e);
+		}
+
+		private void canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
+		{
+			PointerReleased?.Invoke((UIElement)sender, e);
 		}
 	}
 }

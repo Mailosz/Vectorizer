@@ -1,5 +1,8 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.UI;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +21,16 @@ namespace VectorizerApp.Operators
 		CanvasBitmap bitmap;
 
 		int width, height;
+		MainWindow mainWindow;
+		private TextBlock ridTB;
+		private TextBlock coordTB;
 
 		public RegionsViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
 			Context = context;
+
+			viewer.PointerMoved += Viewer_PointerMoved;
 
 			var bytes = context.OriginalBitmap.GetPixelBytes();
 
@@ -37,6 +45,27 @@ namespace VectorizerApp.Operators
 
 			this.width = source.Width;
 			this.height = source.Height;
+		}
+
+		private void Viewer_PointerMoved(UIElement sender, PointerRoutedEventArgs e)
+		{
+			var point = e.GetCurrentPoint(sender).Position;
+
+			int x = (int)point.X;
+			int y = (int)point.Y;
+
+			if (x >= 0 && y >= 0 && x < bitmap.SizeInPixels.Width && y < bitmap.SizeInPixels.Height)
+			{
+				ushort id = board[y * width + x];
+
+				coordTB.Text = $"({x}, {y})";
+				ridTB.Text = "Region: " + id.ToString();
+			}
+			else
+			{
+				coordTB.Text = "()";
+				ridTB.Text = "Region: brak";
+			}
 		}
 
 		public void Initialize()
@@ -66,6 +95,20 @@ namespace VectorizerApp.Operators
 		public void Draw(DrawingArgs args)
 		{
 			args.Session.DrawImage(bitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, bitmap.SizeInPixels.Width, bitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
+		}
+
+		public void SetWindow(MainWindow mainWindow)
+		{
+			this.mainWindow = mainWindow;
+
+			StackPanel sp = new StackPanel();
+			mainWindow.SetRightPanel(sp);
+
+			coordTB = new TextBlock();
+			sp.Children.Add(coordTB);
+
+			ridTB = new TextBlock();
+			sp.Children.Add(ridTB);
 		}
 	}
 }

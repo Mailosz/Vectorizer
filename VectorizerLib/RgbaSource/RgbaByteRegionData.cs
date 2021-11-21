@@ -1,5 +1,6 @@
 ﻿using Accord.Math;
 using Accord.Math.Decompositions;
+using System;
 
 namespace VectorizerLib
 {

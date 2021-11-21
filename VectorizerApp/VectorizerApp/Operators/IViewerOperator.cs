@@ -10,5 +10,6 @@ namespace VectorizerApp
 	{
 		void Draw(DrawingArgs args);
 		void Initialize();
+		void SetWindow(MainWindow mainWindow);
 	}
 }

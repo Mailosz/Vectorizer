@@ -11,5 +11,6 @@ namespace VectorizerLib
 		public float RegionizationTreshold { get; set; }
 		public uint RegionizationMaximumSteps { get; set; }
 		public uint RegionizationMinimumSteps { get; set; }
+		public long RegionMinimumArea { get; internal set; } = 25;
 	}
 }

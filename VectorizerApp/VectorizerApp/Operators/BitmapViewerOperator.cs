@@ -27,5 +27,10 @@ namespace VectorizerApp.Operators
 		{
 			args.Session.DrawImage(Context.OriginalBitmap, 0f, 0f, new Windows.Foundation.Rect(0,0, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
 		}
+
+		public void SetWindow(MainWindow mainWindow)
+		{
+			
+		}
 	}
 }

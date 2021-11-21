@@ -79,5 +79,10 @@ namespace VectorizerApp.Operators
 				i++;
 			}
 		}
+
+		public void SetWindow(MainWindow mainWindow)
+		{
+			
+		}
 	}
 }

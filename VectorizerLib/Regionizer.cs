@@ -76,6 +76,7 @@ namespace VectorizerLib
 			iterator.ResetIterator(region);
 			do
 			{
+				iterator.AppendPixelLocation(region);
 				iterator.AppendCurrentPixelValuesToRegionData(region);
 			}
 			while (iterator.Next());
@@ -90,6 +91,11 @@ namespace VectorizerLib
 
 			if (region != null)
 			{
+				if ((region.SplitValue < Properties.RegionizationTreshold && passesCount > Properties.RegionizationMinimumSteps) || passesCount > Properties.RegionizationMaximumSteps)
+				{
+					return false;
+				}
+
 				divideRegion(region, iterator);
 				passesCount++;
 				return true;
@@ -136,7 +142,7 @@ namespace VectorizerLib
 			var rAbove = createRegion();
 			var rBelow = createRegion();
 
-			//TODO: instead of creating two new regions only create one
+			//TODO: instead of creating two new regions only create one -nah
 
 			iterator.ResetIterator(region);
 			do
@@ -146,11 +152,11 @@ namespace VectorizerLib
 					switch (iterator.CheckCurrentPixel(region))
 					{
 						case PixelValue.Above:
-							//iterator.AppendCurrentPixelValuesToRegionData(rAbove);
+							iterator.AppendPixelLocation(rAbove);
 							board[iterator.GetPosition()] = rAbove.Id;
 							break;
 						case PixelValue.Below:
-							iterator.AppendCurrentPixelValuesToRegionData(rBelow);
+							iterator.AppendPixelLocation(rBelow);
 							board[iterator.GetPosition()] = rBelow.Id;
 							break;
 						default: throw new Exception("Illegal state");
@@ -173,14 +179,33 @@ namespace VectorizerLib
 			}
 			else
 			{
-				rAbove.ComputeValues();
 				finishRegion(rAbove);
-				rBelow.ComputeValues();
 				finishRegion(rBelow);
+				var regions = floodFill(region, rBelow, rAbove);
+
+				removeRegion(rAbove);
+				removeRegion(rBelow);
+
+				foreach (var frd in regions)
+				{
+					frd.Region.ComputeValues();
+
+					if (frd.Region.Area < Properties.RegionMinimumArea)
+					{
+						eraseRegion(frd.Region);
+						continue;
+					}
+
+					finishRegion(frd.Region);
+				}
 			}
 
 
 			removeRegion(region);
+
+			//
+			// subfunctions
+			//
 
 			void finishRegion(RegionData rdata)
 			{
@@ -192,16 +217,62 @@ namespace VectorizerLib
 				rdata.Y1 += region.Y1;
 				rdata.Y2 += region.Y1;
 			}
+
+			void eraseRegion(RegionData rr)
+			{
+				//find region to append this region to
+				var neighbors = new List<ushort>(rr.GetNeighbors());
+				var neighbor = regionsArray[neighbors.First()]; //TODO: decide best neighbor
+
+				foreach (var n in neighbors)
+				{
+					regionsArray[n].RemoveNeighbor(rr.Id);
+					regionsArray[n].AddNeighbor(neighbor.Id);
+
+					neighbor.AddNeighbor(n);
+				}
+
+				iterator.ResetIterator(rr);
+				if (rr.Area == 1)
+				{
+					board[iterator.GetPosition()] = neighbor.Id;
+					iterator.AppendPixelLocation(neighbor);
+					iterator.AppendCurrentPixelValuesToRegionData(neighbor);
+				}
+				else
+				{
+					
+					do
+					{
+						if (board[iterator.GetPosition()] == rr.Id)
+						{
+							board[iterator.GetPosition()] = neighbor.Id;
+							iterator.AppendPixelLocation(neighbor);
+							iterator.AppendCurrentPixelValuesToRegionData(neighbor);
+						}
+					}
+					while (iterator.Next());
+				}
+
+				neighbor.ComputeValues();
+				finishRegion(neighbor);
+				removeRegion(rr);
+			}
 		}
 
 
+		int regionsCount = 0;
 		private RegionData createRegion()
 		{
-			if (regionsList.Count == regionsList.Capacity) throw new IndexOutOfRangeException("Too many regions");
+			if (regionsList.Count == ushort.MaxValue-1) throw new IndexOutOfRangeException("Too many regions");
 
 			while (regionsArray[lastId] != null)
 			{
 				lastId++;
+				if (lastId == ushort.MaxValue)
+				{
+					lastId = 0;
+				}
 			}
 
 			RegionData region = source.CreateRegionData();
@@ -211,6 +282,7 @@ namespace VectorizerLib
 			//
 			regionsArray[lastId] = region;
 			regionsList.Add(region);
+			regionsCount++;
 			return region;
 		}
 
@@ -218,19 +290,13 @@ namespace VectorizerLib
 		{
 			regionsArray[region.Id] = null;
 			regionsList.Remove(region);
+			regionsCount--;
 		}
 
 
 		//
 		// flood fill
 		//
-
-		class FloodFiller
-		{
-			public RegionData Region { get; set; }
-			public Queue<Seed> Seeds { get; set; }
-			public int SearchPos { get; set; }
-		}
 
 		struct Seed
 		{
@@ -244,23 +310,20 @@ namespace VectorizerLib
 		}
 
 
-		private void regionFill(RegionData region)
+		private List<FloodRegionData> floodFill(RegionData oldregion, RegionData region1, RegionData region2)
 		{
-			FloodFiller ff = new FloodFiller()
-			{
-				Region = region,
-				Seeds = new Queue<Seed>(region.Y2 - region.Y1 + 5)
-			};
+			int line = oldregion.Y1;
+			int end = oldregion.Y2 * width + oldregion.X2;
+			int start = oldregion.Y1 * width + oldregion.X1;
+			int rw = oldregion.X2 - oldregion.X1 + 1;
 
-			int end = region.Y2 * width + region.X2;
-			int start = region.Y1 * width + region.X1;
-			int rw = region.X2 - region.X1 + 1;
+			RegionData currentRegion = null;
 
 			int lineEnd = start + rw;
 			int searchpos = start;
 
-			List<FloodRegionData> nRegions = new List<FloodRegionData>(16);
-			Queue<Seed> seeds = new Queue<Seed>(region.Y2 - region.Y1 + 5);
+			List<FloodRegionData> nRegions = new List<FloodRegionData>(64);
+			Queue<Seed> seeds = new Queue<Seed>(oldregion.Y2 - oldregion.Y1 + 5);
 
 			while (findBeginning())
 			{
@@ -271,20 +334,18 @@ namespace VectorizerLib
 					Region = createRegion(),
 				};
 				nRegions.Add(frd);
-				board[searchpos] = frd.Region.Id;
+				paintPixel(searchpos, frd);
+				checkForNeighborsAtCurrentSearchpos();
 
 				//selecting first line
 				for (searchpos++; searchpos < lineEnd; searchpos++)
 				{
-					if (board[searchpos] == region.Id)
+					if (board[searchpos] == currentRegion.Id)
 					{
 						paintPixel(searchpos, frd);
+						checkForNeighborsAtCurrentSearchpos();
 					}
-					else
-					{
-						
-						break;
-					}
+					else break;
 				}
 				//creating first seed
 				addSeed(seedstart, searchpos, 1);
@@ -293,10 +354,9 @@ namespace VectorizerLib
 				{
 					processSeed(seed, frd);
 				}
-
-				//next pixel
-				searchpos++;
 			}
+
+			return nRegions;
 
 			//
 			// inline methods
@@ -304,7 +364,9 @@ namespace VectorizerLib
 			void paintPixel(int pos, FloodRegionData frd)
 			{
 				board[pos] = frd.Region.Id;
-				frd.Region.Area++;
+				int y = Math.DivRem(pos, width, out int x);
+				frd.Region.AppendPixelLocation(x, y);
+				iterator.AppendPixelValuesToRegionData(frd.Region, pos);
 			}
 
 			bool findBeginning()
@@ -321,17 +383,49 @@ namespace VectorizerLib
 						}
 						searchpos = start;
 						lineEnd = start + rw;
+						line++;
 						continue;
 					}
 
-					if (board[searchpos] == region.Id)
+					if (board[searchpos] == region1.Id)
 					{
+						currentRegion = region1;
+						return true;
+
+					}
+					else if (board[searchpos] == region2.Id)
+					{
+						currentRegion = region2;
 						return true;
 					}
 
+					//checkForNeighborsAtCurrentSearchpos();
 					searchpos++;
 				}
+			}
 
+			void checkForNeighborsAtCurrentSearchpos()
+			{
+				if (searchpos != start)
+				{
+					ushort r1 = board[searchpos - 1];
+					ushort r2 = board[searchpos];
+					if (r1 != r2)
+					{
+						regionsArray[r1].AddNeighbor(r2);
+						regionsArray[r2].AddNeighbor(r1);
+					}
+				}
+				if (line != 0)
+				{
+					ushort r1 = board[searchpos - width];
+					ushort r2 = board[searchpos];
+					if (r1 != r2)
+					{
+						regionsArray[r1].AddNeighbor(r2);
+						regionsArray[r2].AddNeighbor(r1);
+					}
+				}
 			}
 
 			void addSeed(int seedstart, int seedend, int direction){
@@ -371,17 +465,18 @@ namespace VectorizerLib
 			{
 				int direction = Math.Sign(seed.End);
 				int seedend = Math.Abs(seed.End);
-				int minimum = seed.Start % width;
+				int minimum = seed.Start - seed.Start % width;
 
 				int pos, seedstart;
-				if (board[seed.Start] == region.Id)
+				if (board[seed.Start] == currentRegion.Id)
 				{
 					paintPixel(seed.Start, frd);
 					//left side
 					pos = seed.Start - 1;
+					
 					while (pos >= minimum)
 					{
-						if (board[pos] == region.Id)
+						if (board[pos] == currentRegion.Id)
 						{
 							paintPixel(pos, frd);
 						}
@@ -409,7 +504,7 @@ namespace VectorizerLib
 							// no pixels to fill - dead end
 							return;
 						}
-						if (board[pos] == region.Id)
+						if (board[pos] == currentRegion.Id)
 						{
 							paintPixel(pos, frd);
 							seedstart = pos;
@@ -423,7 +518,7 @@ namespace VectorizerLib
 				//inside
 				while (pos < seedend)
 				{
-					if (board[pos] == region.Id)
+					if (board[pos] == currentRegion.Id)
 					{
 						paintPixel(pos, frd);
 					}
@@ -438,7 +533,7 @@ namespace VectorizerLib
 								//that's all in this line
 								return;
 							}
-							if (board[pos] == region.Id)
+							if (board[pos] == currentRegion.Id)
 							{
 								seedstart = pos;
 								paintPixel(pos, frd);
@@ -453,21 +548,22 @@ namespace VectorizerLib
 				int maximum = minimum + width;
 				while (pos < maximum)
 				{
-					if (board[pos] == region.Id)
+					if (board[pos] == currentRegion.Id)
 					{
 						paintPixel(pos, frd);
 					}
 					else
 					{
-						addSeed(seedstart, pos - 1, direction);
-						if (pos > seedend + 1)
-						{
-							addSeed(seedend + 1, pos, direction * -1);
-						}
+						break;
 					}
+					pos++;
 				}
 
-
+				addSeed(seedstart, pos - 1, direction);
+				if (pos > seedend + 1)
+				{
+					addSeed(seedend + 1, pos, direction * -1);
+				}
 			}
 		}
 

@@ -41,7 +41,7 @@ namespace VectorizerApp
 			{
 				RegionizationTreshold = 0.1f,
 				RegionizationMinimumSteps = 10,
-				RegionizationMaximumSteps = 100,
+				RegionizationMaximumSteps = 25,
 			};
 		}
 
@@ -96,8 +96,13 @@ namespace VectorizerApp
 		{
 			if (currentOperator != null) history.Add(currentOperator);
 
-			currentOperator = newOperator;
+			setViewerOperator(newOperator);
+		}
 
+		private void setViewerOperator(IViewerOperator newOperator)
+		{
+			currentOperator = newOperator;
+			newOperator.SetWindow(this);
 			newOperator.Initialize();
 
 			viewer.Invalidate();
@@ -120,6 +125,22 @@ namespace VectorizerApp
 				var oper = new TracingViewerOperator(viewer, rvo.Context);
 
 				openNewViewerOperator(oper);
+			}
+		}
+
+		public void SetRightPanel(object element)
+		{
+			rightPanel.Content = element;
+		}
+
+		private void undoButton_Click(object sender, RoutedEventArgs e)
+		{
+			
+			if (history.Count > 0)
+			{
+				var opr = history.Last();
+				history.Remove(opr);
+				setViewerOperator((IViewerOperator)opr);
 			}
 		}
 	}

@@ -31,6 +31,13 @@ namespace VectorizerLib
 
 		public void AppendCurrentPixelValuesToRegionData(RgbaByteRegionData region)
 		{
+
+			AppendPixelValuesToRegionData(region, pixel);
+		}
+
+		public void AppendPixelValuesToRegionData(RgbaByteRegionData region, int pixel)
+		{
+			int iterator = pixel * 4;
 			for (int i = 0; i < 4; i++) { region.mean[i] += source.bitmap[iterator + i]; }
 
 			//v1
@@ -45,18 +52,13 @@ namespace VectorizerLib
 			//v2
 			//for (int i = 0; i < 4; i++) { region.cov2[i,0] += source.bitmap[iterator + i] * source.bitmap[iterator + i]; }
 
-
 		}
 
-
-		public void AppendPixelLocation(RgbaByteRegionData computer)
+		public void AppendPixelLocation(RgbaByteRegionData region)
 		{
-			region.area++;
-			if (region.X1 > coli) region.X1 = coli;
-			else if (region.X2 < coli) region.X2 = coli;
-			if (region.Y1 > rowi) region.Y1 = rowi;
-			else if (region.Y2 < rowi) region.Y2 = rowi;
+			region.AppendPixelLocation(coli, rowi);
 		}
+
 
 		public int GetPosition()
 		{
@@ -114,6 +116,5 @@ namespace VectorizerLib
 				return PixelValue.Below;
 			}
 		}
-
 	}
 }

@@ -7,38 +7,7 @@ using System.Threading.Tasks;
 
 namespace VectorizerLib
 {
-	public interface IRegionData
-	{
-		ushort Id { get; set;}
-		int X1 { get; set; }
-		int X2 { get; set; }
-		int Y1 { get; set; }
-		int Y2 { get; set; }
-		long Area { get; set; }
-		double SplitValue { get; }
-		bool IsFinal { get; set; }
 
-		void ComputeValues();
-	}
-
-	public abstract class RegionDataBase : IRegionData
-	{
-		ushort id;
-		public ushort Id { get => id; set { id = value; } } 
-		protected int x1, y1, x2, y2;
-		public int X1 { get => x1; set { x1 = value; } }
-		public int X2 { get => x2; set { x2 = value; } }
-		public int Y1 { get => y1; set { y1 = value; } }
-		public int Y2 { get => y2; set { y2 = value; } }
-
-		internal long area;
-		public long Area { get => area; set { area = value; } }
-		public double SplitValue { get; protected set; }
-
-		public bool IsFinal { get; set; }
-
-		public abstract void ComputeValues();
-	}
 
 	class SimpleRegionizer<RegionData> where RegionData : class, IRegionData
 	{

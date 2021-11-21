@@ -37,7 +37,7 @@ namespace VectorizerLib
 		public void Regionize()
 		{
 
-			SimpleRegionizer<D> posterizer = new ()
+			Regionizer<D> posterizer = new ()
 			{
 				Source = Source,
 				Properties = Properties

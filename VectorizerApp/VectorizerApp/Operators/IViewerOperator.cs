@@ -11,5 +11,10 @@ namespace VectorizerApp
 		void Draw(DrawingArgs args);
 		void Initialize();
 		void SetWindow(MainWindow mainWindow);
+
+		bool PointerPressed(PointerArgs args);
+		bool PointerMoved(PointerArgs args);
+		bool PointerHover(PointerArgs args);
+		void PointerDoubleClick(PointerArgs args);
 	}
 }

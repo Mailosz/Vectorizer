@@ -20,6 +20,7 @@
                                  PointerPressed="canvas_PointerPressed"
                                  PointerMoved="canvas_PointerMoved"
                                  PointerReleased="canvas_PointerReleased"
+                                 PointerCanceled="canvas_PointerCanceled"
                                     
                 />
             </Border>

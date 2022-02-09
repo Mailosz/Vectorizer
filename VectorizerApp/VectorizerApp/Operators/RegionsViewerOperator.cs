@@ -30,8 +30,6 @@ namespace VectorizerApp.Operators
 			this.viewer = viewer;
 			Context = context;
 
-			viewer.PointerMoved += Viewer_PointerMoved;
-
 			var bytes = context.OriginalBitmap.GetPixelBytes();
 
 			RgbaByteSource source = new RgbaByteSource(bytes, (int)context.OriginalBitmap.SizeInPixels.Width);
@@ -47,26 +45,6 @@ namespace VectorizerApp.Operators
 			this.height = source.Height;
 		}
 
-		private void Viewer_PointerMoved(UIElement sender, PointerRoutedEventArgs e)
-		{
-			var point = e.GetCurrentPoint(sender).Position;
-
-			int x = (int)point.X;
-			int y = (int)point.Y;
-
-			if (x >= 0 && y >= 0 && x < bitmap.SizeInPixels.Width && y < bitmap.SizeInPixels.Height)
-			{
-				ushort id = board[y * width + x];
-
-				coordTB.Text = $"({x}, {y})";
-				ridTB.Text = "Region: " + id.ToString();
-			}
-			else
-			{
-				coordTB.Text = "()";
-				ridTB.Text = "Region: brak";
-			}
-		}
 
 		public void Initialize()
 		{
@@ -109,6 +87,43 @@ namespace VectorizerApp.Operators
 
 			ridTB = new TextBlock();
 			sp.Children.Add(ridTB);
+		}
+		public bool PointerPressed(PointerArgs args)
+		{
+			return false;
+		}
+
+		public bool PointerHover(PointerArgs args)
+		{
+			var point = args.Pointer.GetCurrentPoint(args.Sender).Position;
+
+			int x = (int)point.X;
+			int y = (int)point.Y;
+
+			if (x >= 0 && y >= 0 && x < bitmap.SizeInPixels.Width && y < bitmap.SizeInPixels.Height)
+			{
+				ushort id = board[y * width + x];
+
+				coordTB.Text = $"({x}, {y})";
+				ridTB.Text = "Region: " + id.ToString();
+			}
+			else
+			{
+				coordTB.Text = "()";
+				ridTB.Text = "Region: brak";
+			}
+
+			return true;
+		}
+
+		public bool PointerMoved(PointerArgs args)
+		{
+			return false;
+		}
+
+		public void PointerDoubleClick(PointerArgs args)
+		{
+			
 		}
 	}
 }

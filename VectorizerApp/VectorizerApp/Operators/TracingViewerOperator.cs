@@ -82,6 +82,25 @@ namespace VectorizerApp.Operators
 
 		public void SetWindow(MainWindow mainWindow)
 		{
+
+		}
+		public bool PointerPressed(PointerArgs args)
+		{
+			return false;
+		}
+
+		public bool PointerMoved(PointerArgs args)
+		{
+			return false;
+		}
+
+		public bool PointerHover(PointerArgs args)
+		{
+			return false;
+		}
+
+		public void PointerDoubleClick(PointerArgs args)
+		{
 			
 		}
 	}

@@ -29,7 +29,10 @@ namespace VectorizerApp
 		public new event PointerEventArgs PointerMoved;
 		public new event PointerEventArgs PointerPressed;
 		public new event PointerEventArgs PointerReleased;
+		public new event PointerEventArgs PointerCanceled;
 
+
+		public float Zoom { get => scrollViewer.ZoomFactor; }
 
 		public CanvasDevice Device { get => canvas.Device; }
 
@@ -86,6 +89,11 @@ namespace VectorizerApp
 		private void canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
 		{
 			PointerReleased?.Invoke((UIElement)sender, e);
+		}
+
+		private void canvas_PointerCanceled(object sender, PointerRoutedEventArgs e)
+		{
+			PointerCanceled?.Invoke((UIElement)sender, e);
 		}
 	}
 }

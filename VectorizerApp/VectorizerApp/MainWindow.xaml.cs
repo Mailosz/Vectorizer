@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using VectorizerApp.Operators;
 using VectorizerLib;
@@ -128,6 +129,16 @@ namespace VectorizerApp
 			}
 		}
 
+		private void curveButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (currentOperator is TracingViewerOperator tvo)
+			{
+				var oper = new CurveViewerOperator(viewer, tvo.Context);
+
+				openNewViewerOperator(oper);
+			}
+		}
+
 		public void SetRightPanel(object element)
 		{
 			rightPanel.Content = element;
@@ -142,6 +153,70 @@ namespace VectorizerApp
 				history.Remove(opr);
 				setViewerOperator((IViewerOperator)opr);
 			}
+		}
+
+		private void playgroundButton_Click(object sender, RoutedEventArgs e)
+		{
+			var oper = new CurvePlaygroundOperator(viewer);
+
+			openNewViewerOperator(oper);
+		}
+
+		bool ispressed = false;
+		private void viewer_PointerMoved(UIElement sender, PointerRoutedEventArgs e)
+		{
+			var point = e.GetCurrentPoint(sender).Position;
+			var args = new PointerArgs()
+			{
+				Sender = sender,
+				Pointer = e,
+				Zoom = viewer.Zoom,
+				Point = point,
+			};
+			if (ispressed)
+			{
+				currentOperator?.PointerMoved(args);
+			}
+			else
+			{
+				currentOperator?.PointerHover(args);
+			}
+			
+		}
+		DateTime lastClick = DateTime.Now;
+		private Point lastPoint;
+
+		private void viewer_PointerPressed(UIElement sender, PointerRoutedEventArgs e)
+		{
+			var point = e.GetCurrentPoint(sender).Position;
+			var args = new PointerArgs()
+			{
+				Sender = sender,
+				Pointer = e,
+				Zoom = viewer.Zoom,
+				Point = point,
+			};
+			if (DateTime.Now.Subtract(lastClick).TotalMilliseconds < 500 && Vector2.Distance(lastPoint.ToVector2(), point.ToVector2()) < 10)
+			{
+				currentOperator?.PointerDoubleClick(args);
+			} 
+			else
+			{
+				currentOperator?.PointerPressed(args);
+			}
+			lastClick = DateTime.Now;
+			lastPoint = point;
+			ispressed = true;
+		}
+
+		private void viewer_PointerReleased(UIElement sender, PointerRoutedEventArgs e)
+		{
+			ispressed = false;
+		}
+
+		private void viewer_PointerCanceled(UIElement sender, PointerRoutedEventArgs e)
+		{
+			ispressed = false;
 		}
 	}
 }

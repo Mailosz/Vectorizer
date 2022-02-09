@@ -141,7 +141,7 @@ namespace VectorizerLib
 			while (moveArrow(arrow))
 			{
 				//add point to pointlist
-				pointsList.Add(new Vector2(arrow.X, arrow.Y));
+				//pointsList.Add(new Vector2(arrow.X, arrow.Y));
 			}
 
 			edge.Points = pointsList.ToArray();
@@ -283,6 +283,7 @@ namespace VectorizerLib
 										Node = arrow.Node,
 									});
 								}
+								return false;
 							}
 							else //corner
 							{
@@ -290,14 +291,16 @@ namespace VectorizerLib
 								{
 									//turn right
 									arrow.Params = createArrowParams(false, true, false, true);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
 								else
 								{
 									//turn left
 									arrow.Params = createArrowParams(false, false, false, false);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
+								return true;
 							}
-							return false;
 						}
 						else
 						{
@@ -335,6 +338,7 @@ namespace VectorizerLib
 										Node = arrow.Node,
 									});
 								}
+								return false;
 							}
 							else //corner
 							{
@@ -342,14 +346,16 @@ namespace VectorizerLib
 								{
 									//turn right
 									arrow.Params = createArrowParams(false, false, false, true);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
 								else
 								{
 									//turn left
 									arrow.Params = createArrowParams(false, true, false, false);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
-							}
-							return false;
+								return true;
+							}							
 						}
 						else
 						{
@@ -390,6 +396,7 @@ namespace VectorizerLib
 										Node = arrow.Node,
 									});
 								}
+								return false;
 							}
 							else //corner
 							{
@@ -397,14 +404,16 @@ namespace VectorizerLib
 								{
 									//turn right
 									arrow.Params = createArrowParams(true, false, false, true);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
 								else
 								{
 									//turn left
 									arrow.Params = createArrowParams(true, true, false, false);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
+								return true;
 							}
-							return false;
 						}
 						else
 						{
@@ -449,11 +458,13 @@ namespace VectorizerLib
 								{
 									//turn right
 									arrow.Params = createArrowParams(true, true, false, true);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
 								else
 								{
 									//turn left
 									arrow.Params = createArrowParams(true, false, false, false);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
 							}
 							return false;
@@ -527,6 +538,7 @@ namespace VectorizerLib
 								{
 									//turn left
 									arrow.Params = createArrowParams(!horizontal, horizontal != forward, true, false);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 									return true;
 								}
 								else // change on the left
@@ -548,6 +560,7 @@ namespace VectorizerLib
 								{
 									//turn right
 									arrow.Params = createArrowParams(!horizontal, horizontal == forward, true, false);
+									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 									return true;
 								}
 								else // change on the right

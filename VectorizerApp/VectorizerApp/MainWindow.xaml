@@ -22,9 +22,11 @@
             <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">Cofnij</Button>
             <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
             <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
+            <Button x:Name="curveButton" Click="curveButton_Click" Margin="8,4">Krzywe</Button>
+            <Button x:Name="playgroundButton" Click="playgroundButton_Click" Margin="8,4">Piaskownica</Button>
         </StackPanel>
         
-        <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1" Grid.ColumnSpan="100"/>
+        <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1" Grid.ColumnSpan="100" PointerMoved="viewer_PointerMoved" PointerPressed="viewer_PointerPressed" PointerReleased="viewer_PointerReleased" PointerCanceled="viewer_PointerCanceled"/>
 
         <Border Grid.Row="1" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10" Padding="10,0" CornerRadius="10" Background="Beige" BorderBrush="Black" BorderThickness="1">
             <ScrollViewer x:Name="rightPanel">

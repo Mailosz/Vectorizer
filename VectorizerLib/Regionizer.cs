@@ -211,11 +211,6 @@ namespace VectorizerLib
 			{
 				if (rdata.X2 < rdata.X1) rdata.X2 = rdata.X1;
 				if (rdata.Y2 < rdata.Y1) rdata.Y2 = rdata.Y1;
-
-				rdata.X1 += region.X1;
-				rdata.X2 += region.X1;
-				rdata.Y1 += region.Y1;
-				rdata.Y2 += region.Y1;
 			}
 
 			void eraseRegion(RegionData rr)
@@ -227,9 +222,13 @@ namespace VectorizerLib
 				foreach (var n in neighbors)
 				{
 					regionsArray[n].RemoveNeighbor(rr.Id);
-					regionsArray[n].AddNeighbor(neighbor.Id);
+					if (n != neighbor.Id)
+					{
+						regionsArray[n].AddNeighbor(neighbor.Id);
 
-					neighbor.AddNeighbor(n);
+						neighbor.AddNeighbor(n);
+					}
+
 				}
 
 				iterator.ResetIterator(rr);

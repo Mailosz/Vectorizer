@@ -14,7 +14,7 @@ namespace VectorizerLib
 		int rowi;
 		int coli;
 		int rowoffset;
-		int w, h;
+		int linestart, edge, end;
 
 
 
@@ -68,12 +68,12 @@ namespace VectorizerLib
 		public bool Next()
 		{
 			coli++;
-			if (coli == w) // next row
+			if (coli > edge) // next row
 			{
 				rowi++;
-				if (rowi == h) return false;
+				if (rowi > end) return false;
 
-				coli = 0;
+				coli = linestart;
 				pixel += rowoffset;
 				iterator = pixel * 4;
 			}
@@ -88,14 +88,16 @@ namespace VectorizerLib
 		public void ResetIterator(RgbaByteRegionData rd)
 		{
 			//number of pixels to skip on the end of a row
-			w = rd.X2 - rd.X1 + 1;
-			h = rd.Y2 - rd.Y1 + 1;
+			int w = rd.X2 - rd.X1 + 1;
+			linestart = rd.X1;
+			edge = rd.X2;
+			end = rd.Y2;
 			rowoffset = source.Width - w + 1;
 
 			pixel = rd.Y1 * source.Width + rd.X1;
 			iterator = pixel * 4;
-			coli = 0;
-			rowi = 0;
+			coli = rd.X1;
+			rowi = rd.Y1;
 		}
 
 

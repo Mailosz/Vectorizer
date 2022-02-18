@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace VectorizerLib
@@ -20,6 +21,11 @@ namespace VectorizerLib
 		public TracedNode Start;
 		public TracedNode End;
 		public Vector2[] Points;
+
+		public override string ToString()
+		{
+			return "<" + Start.X.ToString() +", " + Start.Y.ToString() + ">" + string.Concat(from p in Points select p.ToString()) + "<" + End.X.ToString() + ", " + End.Y.ToString() + ">";
+		}
 	}
 
 	public class TracedNode

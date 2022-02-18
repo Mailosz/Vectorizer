@@ -38,14 +38,19 @@ namespace VectorizerLib
 		public void AppendPixelValuesToRegionData(RgbaByteRegionData region, int pixel)
 		{
 			int iterator = pixel * 4;
-			for (int i = 0; i < 4; i++) { region.mean[i] += source.bitmap[iterator + i]; }
+			double[] diff = new double[4];
+			for (int i = 0; i < 4; i++) 
+			{ 
+				diff[i] = source.bitmap[iterator + i] - region.mean[i];
+				region.mean[i] += diff[i] / region.Area; 
+			}
 
 			//v1
 			for (int a = 0; a < 4; a++)
 			{
 				for (int b = 0; b < 4; b++)
 				{
-					region.cov[a, b] += source.bitmap[iterator + a] * source.bitmap[iterator + b];
+					region.cov[a, b] += diff[a] * diff[b] * (region.Area - 1) / region.Area;
 				}
 			}
 

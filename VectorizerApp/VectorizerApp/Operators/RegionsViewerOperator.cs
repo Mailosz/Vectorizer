@@ -24,6 +24,7 @@ namespace VectorizerApp.Operators
 		MainWindow mainWindow;
 		private TextBlock ridTB;
 		private TextBlock coordTB;
+		private TextBlock rsplitvalueTB;
 
 		public RegionsViewerOperator(Viewer viewer, Context context)
 		{
@@ -39,6 +40,7 @@ namespace VectorizerApp.Operators
 			vectorizer.Properties = context.Properties;
 			vectorizer.Regionize();
 			Context.Vectorizer = vectorizer;
+			Context.RegionizationResult = vectorizer.RegionizationResult;
 			this.board = vectorizer.RegionizationResult.Board;
 
 			this.width = source.Width;
@@ -87,6 +89,9 @@ namespace VectorizerApp.Operators
 
 			ridTB = new TextBlock();
 			sp.Children.Add(ridTB);
+
+			rsplitvalueTB = new TextBlock();
+			sp.Children.Add(rsplitvalueTB);
 		}
 		public bool PointerPressed(PointerArgs args)
 		{
@@ -104,13 +109,24 @@ namespace VectorizerApp.Operators
 			{
 				ushort id = board[y * width + x];
 
+
 				coordTB.Text = $"({x}, {y})";
 				ridTB.Text = "Region: " + id.ToString();
+
+				if (Context.RegionizationResult.Regions.TryGetValue(id, out IRegionData region))
+				{
+					rsplitvalueTB.Text = "SplitValue: " + region.SplitValue.ToString();
+				}
+				else
+				{
+					rsplitvalueTB.Text = "!!! No such region !!!";
+				}
 			}
 			else
 			{
 				coordTB.Text = "()";
 				ridTB.Text = "Region: brak";
+				rsplitvalueTB.Text = "";
 			}
 
 			return true;

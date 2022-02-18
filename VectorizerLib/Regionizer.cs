@@ -45,7 +45,10 @@ namespace VectorizerLib
 				Width = source.Width,
 				Height = source.Height,
 				Board = board,
-				RegionCount = 4096
+				Regions = regionsList.ToDictionary((rd) => rd.Id, (rd) => (IRegionData)rd),
+				RegionCount = regionsCount,
+				PeakCov = maxDiff,
+				Steps = passesCount,
 			};
 		}
 
@@ -108,7 +111,93 @@ namespace VectorizerLib
 
 		private void finalPass()
 		{
+			for (int i = 0; i < regionsList.Count;i++ )
+			{
+				if (regionsList[i].Area < Properties.RegionMinimumArea)
+				{
+					if (eraseRegion(regionsList[i]))
+						i--;
+					continue;
+				}
+			}
+
+			
 			//TODO: anything
+		}
+
+		/// <summary>
+		/// Adds region to nearest neighbor
+		/// </summary>
+		/// <param name="rr"></param>
+		private bool eraseRegion(RegionData rr)
+		{
+			//find region to append this region to
+			var neighbors = new List<ushort>(rr.GetNeighbors());
+			if (neighbors.Count == 0) return false;
+
+			//TODO: decide best neighbor
+			int selectedNeighbor = 0;
+			float minDiff = float.PositiveInfinity;
+			for (int n = 0; n < neighbors.Count; n++)
+			{
+				float diff = 0f;
+				for (int i = 0; i < rr.Mean.Length; i++)
+				{
+					diff += MathF.Abs(rr.Mean[i] - regionsArray[neighbors[n]].Mean[i]);
+				}
+
+				if (diff < minDiff)
+				{
+					minDiff = diff;
+					selectedNeighbor = n;
+				}
+			}
+			var neighbor = regionsArray[neighbors[selectedNeighbor]]; 
+
+			foreach (var n in neighbors)
+			{
+				regionsArray[n].RemoveNeighbor(rr.Id);
+				if (n != neighbor.Id)
+				{
+					regionsArray[n].AddNeighbor(neighbor.Id);
+
+					neighbor.AddNeighbor(n);
+				}
+			}
+
+			iterator.ResetIterator(rr);
+			if (rr.Area == 1)
+			{
+				board[iterator.GetPosition()] = neighbor.Id;
+				iterator.AppendPixelLocation(neighbor);
+				iterator.AppendCurrentPixelValuesToRegionData(neighbor);
+			}
+			else
+			{
+
+				do
+				{
+					if (board[iterator.GetPosition()] == rr.Id)
+					{
+						board[iterator.GetPosition()] = neighbor.Id;
+						iterator.AppendPixelLocation(neighbor);
+						iterator.AppendCurrentPixelValuesToRegionData(neighbor);
+					}
+				}
+				while (iterator.Next());
+			}
+
+			neighbor.ComputeValues();
+			finishRegion(neighbor);
+			removeRegion(rr);
+
+			return true;
+		}
+
+		void finishRegion(RegionData rdata)
+		{
+			if (rdata.X2 < rdata.X1) rdata.X2 = rdata.X1;
+			if (rdata.Y2 < rdata.Y1) rdata.Y2 = rdata.Y1;
 		}
 
 		/// <summary>
@@ -169,12 +258,26 @@ namespace VectorizerLib
 			{
 				rBelow.IsFinal = true;
 				rBelow.ComputeValues();
+
+				foreach (var n in region.GetNeighbors())
+				{
+					var neighbor = regionsArray[n];
+					neighbor.AddNeighbor(rBelow.Id);
+					rBelow.AddNeighbor(n);
+				}
 				removeRegion(rAbove);
 			}
 			else if (rBelow.Area == 0)
 			{
 				rAbove.IsFinal = true;
 				rAbove.ComputeValues();
+
+				foreach (var n in region.GetNeighbors())
+				{
+					var neighbor = regionsArray[n];
+					neighbor.AddNeighbor(rAbove.Id);
+					rAbove.AddNeighbor(n);
+				}
 				removeRegion(rBelow);
 			}
 			else
@@ -190,73 +293,15 @@ namespace VectorizerLib
 				{
 					frd.Region.ComputeValues();
 
-					if (frd.Region.Area < Properties.RegionMinimumArea)
-					{
-						eraseRegion(frd.Region);
-						continue;
-					}
-
 					finishRegion(frd.Region);
 				}
+
+
 			}
 
 
 			removeRegion(region);
 
-			//
-			// subfunctions
-			//
-
-			void finishRegion(RegionData rdata)
-			{
-				if (rdata.X2 < rdata.X1) rdata.X2 = rdata.X1;
-				if (rdata.Y2 < rdata.Y1) rdata.Y2 = rdata.Y1;
-			}
-
-			void eraseRegion(RegionData rr)
-			{
-				//find region to append this region to
-				var neighbors = new List<ushort>(rr.GetNeighbors());
-				var neighbor = regionsArray[neighbors.First()]; //TODO: decide best neighbor
-
-				foreach (var n in neighbors)
-				{
-					regionsArray[n].RemoveNeighbor(rr.Id);
-					if (n != neighbor.Id)
-					{
-						regionsArray[n].AddNeighbor(neighbor.Id);
-
-						neighbor.AddNeighbor(n);
-					}
-
-				}
-
-				iterator.ResetIterator(rr);
-				if (rr.Area == 1)
-				{
-					board[iterator.GetPosition()] = neighbor.Id;
-					iterator.AppendPixelLocation(neighbor);
-					iterator.AppendCurrentPixelValuesToRegionData(neighbor);
-				}
-				else
-				{
-					
-					do
-					{
-						if (board[iterator.GetPosition()] == rr.Id)
-						{
-							board[iterator.GetPosition()] = neighbor.Id;
-							iterator.AppendPixelLocation(neighbor);
-							iterator.AppendCurrentPixelValuesToRegionData(neighbor);
-						}
-					}
-					while (iterator.Next());
-				}
-
-				neighbor.ComputeValues();
-				finishRegion(neighbor);
-				removeRegion(rr);
-			}
 		}
 
 
@@ -285,11 +330,21 @@ namespace VectorizerLib
 			return region;
 		}
 
+		/// <summary>
+		/// Removes region and references to it from its neighbors
+		/// </summary>
+		/// <param name="region"></param>
 		private void removeRegion(RegionData region)
 		{
 			regionsArray[region.Id] = null;
 			regionsList.Remove(region);
 			regionsCount--;
+
+			foreach (var n in region.GetNeighbors())
+			{
+				var neighbor = regionsArray[n];
+				neighbor.RemoveNeighbor(region.Id);
+			}
 		}
 
 
@@ -334,7 +389,7 @@ namespace VectorizerLib
 				};
 				nRegions.Add(frd);
 				paintPixel(searchpos, frd);
-				checkForNeighborsAtCurrentSearchpos();
+				checkForNeighborsHorizontally(searchpos);
 
 				//selecting first line
 				for (searchpos++; searchpos < lineEnd; searchpos++)
@@ -342,9 +397,14 @@ namespace VectorizerLib
 					if (board[searchpos] == currentRegion.Id)
 					{
 						paintPixel(searchpos, frd);
-						checkForNeighborsAtCurrentSearchpos();
+						checkForNeighborsVertically(searchpos);
 					}
-					else break;
+					else
+					{
+						addNeighbors(frd.Region.Id, board[searchpos]);
+						break;
+					}
+
 				}
 				//creating first seed
 				addSeed(seedstart, searchpos, 1);
@@ -403,29 +463,49 @@ namespace VectorizerLib
 				}
 			}
 
-			void checkForNeighborsAtCurrentSearchpos()
+			void checkForNeighborsHorizontally(int pos)
 			{
-				if (searchpos != start)
+				if (pos > 0)
 				{
-					ushort r1 = board[searchpos - 1];
-					ushort r2 = board[searchpos];
-					if (r1 != r2)
+					ushort r1 = board[pos - 1];
+					ushort r2 = board[pos];
+					if (r1 != r2 && regionsArray[r1] != null)
 					{
-						regionsArray[r1].AddNeighbor(r2);
-						regionsArray[r2].AddNeighbor(r1);
-					}
-				}
-				if (line != 0)
-				{
-					ushort r1 = board[searchpos - width];
-					ushort r2 = board[searchpos];
-					if (r1 != r2)
-					{
-						regionsArray[r1].AddNeighbor(r2);
-						regionsArray[r2].AddNeighbor(r1);
+						addNeighbors(r1, r2);
 					}
 				}
 			}
+
+			void checkForNeighborsVertically(int pos)
+			{
+				if (pos >= width)
+				{
+					ushort r1 = board[pos - width];
+					ushort r2 = board[pos];
+					if (r1 != r2 && regionsArray[r1] != null)
+					{
+						addNeighbors(r1, r2);
+					}
+				}
+			}
+
+			///
+
+			void addNeighbors(ushort r1, ushort r2)
+			{
+				//only checking if r2is not null, r1 should alway be not null
+				if (r1 == r2)
+				{
+					Console.WriteLine("EQ");
+				}
+
+				if (regionsArray[r2] != null)
+				{
+					regionsArray[r1].AddNeighbor(r2);
+					regionsArray[r2].AddNeighbor(r1);
+				}
+			}
+
 
 			void addSeed(int seedstart, int seedend, int direction){
 				Seed seed;
@@ -481,6 +561,7 @@ namespace VectorizerLib
 						}
 						else
 						{
+							addNeighbors(frd.Region.Id, board[pos]);
 							break;
 						}
 						pos--;
@@ -493,7 +574,7 @@ namespace VectorizerLib
 					}
 					pos = seed.Start + 1;
 				}
-				else
+				else //searching for the beginning of matching pixels to fill
 				{
 					pos = seed.Start + 1;
 					while (true)
@@ -509,6 +590,10 @@ namespace VectorizerLib
 							seedstart = pos;
 							pos++;
 							break;
+						}
+						else if (frd.Region.Id != board[pos]) // different region, make them neighbors
+						{
+							addNeighbors(frd.Region.Id, board[pos]);
 						}
 						pos++;
 					}
@@ -538,6 +623,10 @@ namespace VectorizerLib
 								paintPixel(pos, frd);
 								break;
 							}
+							else if (frd.Region.Id != board[pos]) // different region, make them neighbors
+							{
+								addNeighbors(frd.Region.Id, board[pos]);
+							}
 						}
 					}
 					pos++;
@@ -553,6 +642,7 @@ namespace VectorizerLib
 					}
 					else
 					{
+						addNeighbors(frd.Region.Id, board[pos]);
 						break;
 					}
 					pos++;

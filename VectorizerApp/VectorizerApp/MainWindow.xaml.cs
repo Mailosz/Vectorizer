@@ -34,6 +34,8 @@ namespace VectorizerApp
 		IViewerOperator currentOperator;
 		private VectorizerProperties properties;
 
+		public VectorizerProperties Properties { get => properties; set => properties = value; }
+
 		public MainWindow()
 		{
 			this.InitializeComponent();
@@ -41,8 +43,8 @@ namespace VectorizerApp
 			properties = new VectorizerProperties()
 			{
 				RegionizationTreshold = 0.1f,
-				RegionizationMinimumSteps = 10,
-				RegionizationMaximumSteps = 25,
+				RegionizationMinimumSteps = 25,
+				RegionizationMaximumSteps = 50,
 			};
 		}
 
@@ -186,6 +188,8 @@ namespace VectorizerApp
 		DateTime lastClick = DateTime.Now;
 		private Point lastPoint;
 
+
+
 		private void viewer_PointerPressed(UIElement sender, PointerRoutedEventArgs e)
 		{
 			var point = e.GetCurrentPoint(sender).Position;
@@ -217,6 +221,11 @@ namespace VectorizerApp
 		private void viewer_PointerCanceled(UIElement sender, PointerRoutedEventArgs e)
 		{
 			ispressed = false;
+		}
+
+		private void optionsButton_Click(object sender, RoutedEventArgs e)
+		{
+			optionsPopup.IsOpen = !optionsPopup.IsOpen;
 		}
 	}
 }

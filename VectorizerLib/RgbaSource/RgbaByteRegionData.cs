@@ -11,11 +11,10 @@ namespace VectorizerLib
 
 	public class RgbaByteRegionData : RegionDataBase, IRegionData
 	{
-		public long[] mean = new long[4];
+		public double[] mean = new double[4];
 		public long[] cov2 = new long[4];
-		public long[,] cov = new long[4, 4];
+		public double[,] cov = new double[4, 4];
 
-		public double[] computedMean = new double[4];
 		public long[,] computedCov = new long[4, 4];
 		public double testValue;
 		public double[] eigenVector;
@@ -25,16 +24,22 @@ namespace VectorizerLib
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				computedMean[i] = (double)mean[i] / (double)area;
+				Mean[i] = (float)(mean[i] /area);
 			}
 
-			for (int a = 0; a < 4; a++)
+			Color = System.Drawing.Color.FromArgb((int)Mean[0], (int)Mean[1], (int)Mean[2], (int)Mean[3]);
+
+			/*for (int a = 0; a < 4; a++)
 			{
 				for (int b = 0; b < 4; b++)
 				{
-					computedCov[a,b] = cov[a,b] - (mean[a] * mean[b]);
+					long covab = cov[a, b];
+					long meana = mean[a];
+					long meanb = mean[b];
+					computedCov[a,b] = covab - (meana * meanb);
+					//computedCov[a,b] = cov[a,b] - (mean[a] * mean[b]);
 				}
-			}
+			}*/
 
 
 			double[,] matrix = new double[4, 4];
@@ -43,7 +48,7 @@ namespace VectorizerLib
 			{
 				for (int y = 0; y < 4; y++)
 				{
-					matrix[x, y] = computedCov[x, y];
+					matrix[x, y] = cov[x, y] / Area;
 				}
 			}
 
@@ -56,10 +61,10 @@ namespace VectorizerLib
 			testValue = 0;
 			for (int i = 0; i < 4; i++)
 			{
-				testValue += computedMean[i] * eigenVector[i];
+				testValue += mean[i] * eigenVector[i];
 			}
 
-			SplitValue = eigenValue;
+			SplitValue = eigenValue * Math.Log2(area);
 		}
 	}
 }

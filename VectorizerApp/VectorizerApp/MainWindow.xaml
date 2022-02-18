@@ -19,6 +19,7 @@
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="100" Orientation="Horizontal">
             <Button x:Name="loadButton" Click="loadButton_Click" Margin="8,4">Otwórz</Button>
+            <Button x:Name="optionsButton" Click="optionsButton_Click" Margin="8,4">Opcje</Button>
             <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">Cofnij</Button>
             <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
             <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
@@ -33,5 +34,21 @@
                 
             </ScrollViewer>
         </Border>
+
+        <Popup x:Name="optionsPopup" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="3">
+            <Border Background="Azure" BorderBrush="Black" BorderThickness="1" CornerRadius="5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ScrollViewer>
+                    <StackPanel Margin="5">
+                
+                        <TextBox Header="Regionization treshold:" Text="{x:Bind Properties.RegionizationTreshold, Mode=TwoWay}"/>
+                        <TextBox Header="Minimalna liczba kroków:" Text="{x:Bind Properties.RegionizationMinimumSteps, Mode=TwoWay}"/>
+                        <TextBox Header="Maksymalna liczba kroków:" Text="{x:Bind Properties.RegionizationMaximumSteps, Mode=TwoWay}"/>
+                        <TextBox Header="Minimalny region:" Text="{x:Bind Properties.RegionMinimumArea, Mode=TwoWay}"/>
+                        <TextBox Header="Kąt ostry:" Text="{x:Bind Properties.FittingAcuteAngle, Mode=TwoWay}"/>
+                        <TextBox Header="Dystans upraszczania:" Text="{x:Bind Properties.FittingDistance, Mode=TwoWay}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Popup>
     </Grid>
 </Window>

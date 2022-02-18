@@ -30,6 +30,7 @@ namespace VectorizerLib
 		public ushort Right { get; set; }
 		public ArrowParams Params { get; set; }
 		public TracedNode Node { get; set; }
+		public bool Used { get; internal set; }
 
 		public override string ToString()
 		{
@@ -77,7 +78,8 @@ namespace VectorizerLib
 
 			while (arrows.TryDequeue(out Arrow arrow))
 			{
-				traceOneEdge(arrow);
+				if (!arrow.Used)
+					traceOneEdge(arrow);
 			}
 
 			return new TracingResult()
@@ -160,69 +162,48 @@ namespace VectorizerLib
 			/// </summary>
 			/// <param name="arrow"></param>
 			/// <returns>True if node created (false means this point has already been reached, don't create new arrows)</returns>
-			bool finishEdgeWithNode(Arrow arrow)
+			bool finishEdgeWithNode(Arrow arrow, params ushort[] checkRegions)
 			{
 				allEdges.Add(edge);
 
-				//TODO: we are retrieving region twice - here, and at the end of the (are we? i dont remember whether i fixed it, check)
-				TracedRegion leftregion, rightregion;
-				TracedNode node;
-				bool nnodecreated = false;
-				if (arrow.Params.HasFlag(ArrowParams.HasBoth))
-				{
-					leftregion = getOrCreateTracedRegion(arrow.Left);
-					rightregion = getOrCreateTracedRegion(arrow.Right);
+				TracedRegion nregion = getOrCreateTracedRegion(checkRegions.First());
+				nregion.Edges.Add(edge);
 
-					leftregion.Edges.Add(edge);
-					rightregion.Edges.Add(edge);
-
-					
-					if (leftregion.Nodes.Count < rightregion.Nodes.Count)
-					{
-						nnodecreated = findOrCreateNode(arrow.X, arrow.Y, leftregion.Nodes, out node);
-					}
-					else
-					{
-						nnodecreated = findOrCreateNode(arrow.X, arrow.Y, rightregion.Nodes, out node);
-					}
-
-					if (nnodecreated)
-					{
-						leftregion.Nodes.Add(node);
-						rightregion.Nodes.Add(node);
-					}
-				}
-				else if (arrow.Params.HasFlag(ArrowParams.HasOnlyRight))
-				{
-					rightregion = getOrCreateTracedRegion(arrow.Right);
-
-					rightregion.Edges.Add(edge);
-
-					nnodecreated = findOrCreateNode(arrow.X, arrow.Y, rightregion.Nodes, out node);
-
-					if (nnodecreated)
-					{
-						rightregion.Nodes.Add(node);
-					}
-				}
-				else
-				{
-					leftregion = getOrCreateTracedRegion(arrow.Left);
-
-					leftregion.Edges.Add(edge);
-
-					nnodecreated = findOrCreateNode(arrow.X, arrow.Y, leftregion.Nodes, out node);
-
-					if (nnodecreated)
-					{
-						leftregion.Nodes.Add(node);
-					}
-				}
+				bool created = findOrCreateNode(arrow.X, arrow.Y, nregion.Nodes, out TracedNode node);
 
 				node.Edges.Add(edge);
 				arrow.Node = node;
 
-				return nnodecreated;
+				if (created)
+				{
+					nregion.Nodes.Add(node);
+					if (checkRegions.Length > 1)
+					{
+						TracedRegion tr = getOrCreateTracedRegion(checkRegions[1]);
+						if (arrow.Params.HasFlag(ArrowParams.HasBoth)) tr.Edges.Add(edge);
+						tr.Nodes.Add(node);
+
+						for (int i = 2; i < checkRegions.Length; i++)
+						{
+							tr = getOrCreateTracedRegion(checkRegions[i]);
+							tr.Nodes.Add(node);
+						}
+					}
+					return true;
+				}
+				else
+				{
+					foreach (var ar in arrows)
+					{
+						if (ar.X == arrow.X && ar.Y == arrow.Y && ar.Left == arrow.Right && ar.Right == arrow.Left && ar.Params.HasFlag(ArrowParams.HasBoth) == arrow.Params.HasFlag(ArrowParams.HasBoth))
+						{
+							ar.Used = true;
+							break;
+						}
+					}
+					return false;
+				}
+
 
 				//
 				// end of body
@@ -261,7 +242,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow))
+								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -316,7 +297,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow))
+								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -374,7 +355,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow))
+								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -429,7 +410,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow))
+								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -451,6 +432,7 @@ namespace VectorizerLib
 										Node = arrow.Node,
 									});
 								}
+								return false;
 							}
 							else //corner
 							{
@@ -466,8 +448,8 @@ namespace VectorizerLib
 									arrow.Params = createArrowParams(true, false, false, false);
 									pointsList.Add(new Vector2(arrow.X, arrow.Y));
 								}
+								return true;
 							}
-							return false;
 						}
 						else
 						{
@@ -543,7 +525,7 @@ namespace VectorizerLib
 								}
 								else // change on the left
 								{
-									if (finishEdgeWithNode(arrow))
+									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, left))
 									{
 										addLeftwardArrow();
 										addForwardArrow();
@@ -565,7 +547,7 @@ namespace VectorizerLib
 								}
 								else // change on the right
 								{
-									if (finishEdgeWithNode(arrow))
+									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, right))
 									{
 										addForwardArrow();
 										addRightwardArrow();
@@ -577,7 +559,7 @@ namespace VectorizerLib
 							{
 								if (left == right) // single region ahead
 								{
-									if (finishEdgeWithNode(arrow))
+									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, left))
 									{
 										addLeftwardArrow();
 										addRightwardArrow();
@@ -586,7 +568,7 @@ namespace VectorizerLib
 								}
 								else // split into two regions ahead (4-way connection point)
 								{
-									if (finishEdgeWithNode(arrow))
+									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, left, right))
 									{
 										addLeftwardArrow();
 										addForwardArrow();
@@ -606,7 +588,7 @@ namespace VectorizerLib
 						}
 						else // new region ahead
 						{
-							if (finishEdgeWithNode(arrow))
+							if (finishEdgeWithNode(arrow, arrow.Right, right))
 							{
 								//new arrow forward
 								arrows.Enqueue(new Arrow()
@@ -642,7 +624,7 @@ namespace VectorizerLib
 						}
 						else // new region ahead
 						{
-							if (finishEdgeWithNode(arrow))
+							if (finishEdgeWithNode(arrow, arrow.Left, left))
 							{
 								//new arrow leftward
 								arrows.Enqueue(new Arrow()

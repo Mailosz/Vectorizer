@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace VectorizerLib
 {
@@ -13,6 +14,8 @@ namespace VectorizerLib
 		long Area { get; set; }
 		double SplitValue { get; }
 		bool IsFinal { get; set; }
+
+		float[] Mean { get; set; }
 
 		void AddNeighbor(ushort id);
 		void RemoveNeighbor(ushort id);
@@ -37,6 +40,12 @@ namespace VectorizerLib
 		public double SplitValue { get; protected set; }
 
 		public BitArray neighbors = new BitArray(ushort.MaxValue);
+
+		public Color Color { get; set; }
+
+		public float[] Mean { get; set; } = new float[4];
+
+		public float[] Cov { get; set; } = new float[4];
 
 		public bool IsFinal { get; set; }
 

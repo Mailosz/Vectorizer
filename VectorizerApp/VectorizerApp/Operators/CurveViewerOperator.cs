@@ -41,9 +41,19 @@ namespace VectorizerApp.Operators
 			{
 				var start = new Vector2(edge.Start.X, edge.Start.Y);
 				var end = new Vector2(edge.End.X, edge.End.Y);
-				var points = DouglasPeucker.Simplify(start, edge.Points, end, 1f).ToArray();
+				var points = DouglasPeucker.Simplify(start, edge.Points, end, Context.Properties.FittingDistance).ToArray();
 
-				geometries[i] = CanvasGeometry.CreatePolygon(viewer.Device, points.Prepend(start).Append(end).ToArray());
+				CanvasPathBuilder cpb = new CanvasPathBuilder(viewer.Device);
+
+				cpb.BeginFigure(start);
+				foreach (var point in points)
+				{
+					cpb.AddLine(point);
+				}
+				cpb.AddLine(end);
+				cpb.EndFigure(CanvasFigureLoop.Open);
+
+				geometries[i] = CanvasGeometry.CreatePath(cpb);
 				i++;
 			}
 

@@ -14,11 +14,7 @@ namespace VectorizerLib
 		{
 			if (points.Length == 0)
 			{
-				return new List<Vector2>() {};
-			}
-			if (points.Length == 1)
-			{
-				return new List<Vector2>() { points[0]};
+				return new List<Vector2>() { };
 			}
 
 			//find furthest point
@@ -45,7 +41,7 @@ namespace VectorizerLib
 				{
 					float xx = (endpoint.X - startpoint.X);
 					float yy = (endpoint.Y - startpoint.Y);
-					float dis = (xx * (startpoint.Y - points[i].Y) - (startpoint.X - points[i].X) * yy) / len;
+					float dis = Math.Abs((xx * (startpoint.Y - points[i].Y) - (startpoint.X - points[i].X) * yy) / len);
 					if (dis > curdis)
 					{
 						furthest = i;
@@ -80,7 +76,7 @@ namespace VectorizerLib
 			}
 			else // the whole line can be simplified
 			{
-				return new List<Vector2> { startpoint, endpoint };
+				return new List<Vector2> { };
 			}
 		} 
 	}

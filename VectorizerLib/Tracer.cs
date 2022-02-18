@@ -66,6 +66,7 @@ namespace VectorizerLib
 		List<Vector2> pointsList;
 		Dictionary<ushort, TracedRegion> regions;
 		List<TracedEdge> allEdges;
+		List<TracedNode> allNodes;
 
 		internal TracingResult Trace()
 		{
@@ -85,6 +86,7 @@ namespace VectorizerLib
 			return new TracingResult()
 			{
 				Regions = regions,
+				Nodes = allNodes,
 				Edges = allEdges,
 			};
 		}
@@ -106,11 +108,18 @@ namespace VectorizerLib
 			arrows = new Queue<Arrow>(1024);
 			pointsList = new List<Vector2>(4096);
 			regions = new Dictionary<ushort, TracedRegion>(poster.RegionCount);
+			allNodes = new List<TracedNode>(1024);
 			allEdges = new List<TracedEdge>(1024);
 
 			ushort cornerregion = poster.Board[0];
 
+			//first region and node
+			TracedRegion ntr = new TracedRegion();
+			regions.Add(cornerregion, ntr);
 			TracedNode cornernode = new TracedNode();
+			cornernode.SmoothRoute = SmoothRoute.FirstSecond;
+			allNodes.Add(cornernode);
+			ntr.Nodes.Add(cornernode);
 
 			arrows.Enqueue(new Arrow()
 			{
@@ -224,6 +233,7 @@ namespace VectorizerLib
 						X = x,
 						Y = y,
 					};
+					allNodes.Add(node);
 					return true;
 				}
 			}

@@ -13,8 +13,10 @@ namespace VectorizerApp
 		public CanvasBitmap OriginalBitmap { get; set; }
 		public VectorizerProperties Properties { get; set; }
 		public RegionizationResult RegionizationResult { get; set; }
+		public FittingResult FittingResult { get; internal set; }
 		public CanvasBitmap RegionsImage { get; internal set; }
 		public TracingResult TracingResult { get; set; }
 		public Vectorizer<RgbaByteRegionData> Vectorizer { get; set; }
+		public TracingResult SimplifiedTracingResult { get; internal set; }
 	}
 }

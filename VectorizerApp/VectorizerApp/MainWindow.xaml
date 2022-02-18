@@ -23,6 +23,7 @@
             <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">Cofnij</Button>
             <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
             <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
+            <Button x:Name="simplifyButton" Click="simplifyButton_Click" Margin="8,4">Uprość</Button>
             <Button x:Name="curveButton" Click="curveButton_Click" Margin="8,4">Krzywe</Button>
             <Button x:Name="playgroundButton" Click="playgroundButton_Click" Margin="8,4">Piaskownica</Button>
         </StackPanel>
@@ -44,7 +45,7 @@
                         <TextBox Header="Minimalna liczba kroków:" Text="{x:Bind Properties.RegionizationMinimumSteps, Mode=TwoWay}"/>
                         <TextBox Header="Maksymalna liczba kroków:" Text="{x:Bind Properties.RegionizationMaximumSteps, Mode=TwoWay}"/>
                         <TextBox Header="Minimalny region:" Text="{x:Bind Properties.RegionMinimumArea, Mode=TwoWay}"/>
-                        <TextBox Header="Kąt ostry:" Text="{x:Bind Properties.FittingAcuteAngle, Mode=TwoWay}"/>
+                        <TextBox Header="Kąt ostry:" Text="{x:Bind Angle, Mode=TwoWay}"/>
                         <TextBox Header="Dystans upraszczania:" Text="{x:Bind Properties.FittingDistance, Mode=TwoWay}"/>
                     </StackPanel>
                 </ScrollViewer>

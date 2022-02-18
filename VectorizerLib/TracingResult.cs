@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -7,6 +8,7 @@ namespace VectorizerLib
 	public class TracingResult
 	{
 		public Dictionary<ushort, TracedRegion> Regions { get; set; }
+		public List<TracedNode> Nodes { get; set; }
 		public List<TracedEdge> Edges { get; set; }
 	}
 
@@ -21,6 +23,7 @@ namespace VectorizerLib
 		public TracedNode Start;
 		public TracedNode End;
 		public Vector2[] Points;
+		public Vector2[] SimplifiedPoints;
 
 		public override string ToString()
 		{
@@ -33,6 +36,18 @@ namespace VectorizerLib
 		public List<TracedEdge> Edges { get; set; } = new List<TracedEdge>(4);
 		public int X { get; set; }
 		public int Y { get; set; }
+		public SmoothRoute SmoothRoute = SmoothRoute.Unknown;
+
+		internal Vector2 ToVector2() => new Vector2(X, Y);
+
+		public override string ToString()
+		{
+			return "{" + X.ToString() + ", " + Y.ToString() + "}";
+		}
 	}
 
+	public enum SmoothRoute : byte
+	{
+		Unknown, None, FirstSecond, FirstThird, FirstForth, SecondThird, SecondForthd, ThirdForth
+	}
 }

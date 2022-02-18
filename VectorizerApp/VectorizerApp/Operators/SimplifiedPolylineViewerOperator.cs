@@ -12,7 +12,7 @@ using Windows.UI;
 
 namespace VectorizerApp.Operators
 {
-	class CurveViewerOperator : IViewerOperator
+	class SimplifiedPolylineViewerOperator : IViewerOperator
 	{
 		public Context Context;
 
@@ -26,7 +26,7 @@ namespace VectorizerApp.Operators
 			TransformBehavior = CanvasStrokeTransformBehavior.Hairline
 		};
 
-		public CurveViewerOperator(Viewer viewer, Context context)
+		public SimplifiedPolylineViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
 
@@ -35,34 +35,26 @@ namespace VectorizerApp.Operators
 
 		public void Initialize()
 		{
-			SimpleCurveFitter scf = new SimpleCurveFitter();
-			scf.Properties = Context.Properties;
-			Context.FittingResult = scf.Fit(Context.TracingResult);
-
-
-			geometries = new CanvasGeometry[Context.FittingResult.Regions.Count];
+			geometries = new CanvasGeometry[Context.TracingResult.Edges.Count];
 			int i = 0;
-			foreach (var region in Context.FittingResult.Regions)
+
+
+			foreach (var edge in Context.TracingResult.Edges)
 			{
+				var start = new Vector2(edge.Start.X, edge.Start.Y);
+				var end = new Vector2(edge.End.X, edge.End.Y);
+				var points = DouglasPeucker.Simplify(start, edge.Points, end, Context.Properties.FittingDistance).ToArray();
+				edge.SimplifiedPoints = points;
+
 				CanvasPathBuilder cpb = new CanvasPathBuilder(viewer.Device);
 
-				bool isfigureclosed = false;
-				cpb.BeginFigure(region.Start);
-				foreach (var elem in region.Path)
+				cpb.BeginFigure(start);
+				foreach (var point in points)
 				{
-					switch (elem.ElementType)
-					{
-						case PathElementType.Line:
-							cpb.AddLine(elem.Coords[0]);
-							break;
-						case PathElementType.Quadratic:
-							break;
-						case PathElementType.Cubic:
-							cpb.AddCubicBezier(elem.Coords[0], elem.Coords[1], elem.Coords[2]);
-							break;
-					}
+					cpb.AddLine(point);
 				}
-				cpb.EndFigure(region.IsClosed ? CanvasFigureLoop.Closed : CanvasFigureLoop.Open);
+				cpb.AddLine(end);
+				cpb.EndFigure(CanvasFigureLoop.Open);
 
 				geometries[i] = CanvasGeometry.CreatePath(cpb);
 				i++;

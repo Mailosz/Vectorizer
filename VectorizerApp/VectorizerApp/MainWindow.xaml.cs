@@ -36,6 +36,15 @@ namespace VectorizerApp
 
 		public VectorizerProperties Properties { get => properties; set => properties = value; }
 
+		public float Angle
+		{
+			get => Properties.FittingAcuteAngle / MathF.PI * 180F;
+			set
+			{
+				Properties.FittingAcuteAngle = value * MathF.PI / 180F;
+			}
+		}
+
 		public MainWindow()
 		{
 			this.InitializeComponent();
@@ -130,12 +139,21 @@ namespace VectorizerApp
 				openNewViewerOperator(oper);
 			}
 		}
-
-		private void curveButton_Click(object sender, RoutedEventArgs e)
+		private void simplifyButton_Click(object sender, RoutedEventArgs e)
 		{
 			if (currentOperator is TracingViewerOperator tvo)
 			{
-				var oper = new CurveViewerOperator(viewer, tvo.Context);
+				var oper = new SimplifiedPolylineViewerOperator(viewer, tvo.Context);
+
+				openNewViewerOperator(oper);
+			}
+		}
+
+		private void curveButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (currentOperator is SimplifiedPolylineViewerOperator svo)
+			{
+				var oper = new CurveViewerOperator(viewer, svo.Context);
 
 				openNewViewerOperator(oper);
 			}
@@ -227,5 +245,6 @@ namespace VectorizerApp
 		{
 			optionsPopup.IsOpen = !optionsPopup.IsOpen;
 		}
+
 	}
 }

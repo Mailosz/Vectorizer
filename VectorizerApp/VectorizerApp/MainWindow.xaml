@@ -42,6 +42,7 @@
                     <StackPanel Margin="5">
                 
                         <TextBox Header="Regionization treshold:" Text="{x:Bind Properties.RegionizationTreshold, Mode=TwoWay}"/>
+                        <TextBox Header="Różnica łączenia:" Text="{x:Bind Properties.JoiningTreshold, Mode=TwoWay}"/>
                         <TextBox Header="Minimalna liczba kroków:" Text="{x:Bind Properties.RegionizationMinimumSteps, Mode=TwoWay}"/>
                         <TextBox Header="Maksymalna liczba kroków:" Text="{x:Bind Properties.RegionizationMaximumSteps, Mode=TwoWay}"/>
                         <TextBox Header="Minimalny region:" Text="{x:Bind Properties.RegionMinimumArea, Mode=TwoWay}"/>

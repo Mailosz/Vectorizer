@@ -32,7 +32,15 @@ namespace VectorizerLib
 			initialize();
 			firstPass();
 			bool keepOn = true;
-			do { keepOn = singlePass(); } while (
+			do 
+			{ 
+				keepOn = singlePass();
+				if (passesCount % 10 == 0)
+				{
+					joinPass();
+				}
+			} 
+			while (
 				(passesCount < properties.RegionizationMinimumSteps ||
 				maxDiff > properties.RegionizationTreshold ||
 				passesCount < properties.RegionizationMinimumSteps)
@@ -109,6 +117,32 @@ namespace VectorizerLib
 			}
 		}
 
+		private void joinPass()
+		{
+			for (int i = 0; i < regionsList.Count; i++)
+			{
+				var region = regionsList[i];
+				if (!tryFindClosestNeighbor(region, out ushort selectedNeighbor, out float minDiff, out List<ushort> neighbors)) continue;
+				var neighbor = regionsArray[selectedNeighbor];
+
+
+				if (minDiff < Properties.JoiningTreshold)
+				{
+					if (region.Area < neighbor.Area)
+					{
+						joinRegions(neighbor, region, neighbors);
+						i--;
+					}
+					else
+					{
+						joinRegions(region, neighbor, new List<ushort>(neighbor.GetNeighbors()));
+						if (selectedNeighbor < i) { i--; }
+					}
+				}
+
+			}
+		}
+
 		private void finalPass()
 		{
 			for (int i = 0; i < regionsList.Count;i++ )
@@ -132,18 +166,33 @@ namespace VectorizerLib
 		private bool eraseRegion(RegionData rr)
 		{
 			//find region to append this region to
-			var neighbors = new List<ushort>(rr.GetNeighbors());
+
+			
+			
+			
+			
+			if (!tryFindClosestNeighbor(rr, out ushort selectedNeighbor, out _, out List<ushort> neighbors)) return false;
+			var neighbor = regionsArray[selectedNeighbor]; 
+
+			joinRegions(neighbor, rr, neighbors);
+
+			return true;
+		}
+
+		private bool tryFindClosestNeighbor(RegionData region, out ushort neighbor, out float minDiff, out List<ushort> neighbors)
+		{
+			neighbors = new List<ushort>(region.GetNeighbors());
+			neighbor = 0;
+			minDiff = float.PositiveInfinity;
 			if (neighbors.Count == 0) return false;
 
-			//TODO: decide best neighbor
 			int selectedNeighbor = 0;
-			float minDiff = float.PositiveInfinity;
 			for (int n = 0; n < neighbors.Count; n++)
 			{
 				float diff = 0f;
-				for (int i = 0; i < rr.Mean.Length; i++)
+				for (int i = 0; i < region.Mean.Length; i++)
 				{
-					diff += MathF.Abs(rr.Mean[i] - regionsArray[neighbors[n]].Mean[i]);
+					diff += MathF.Abs(region.Mean[i] - regionsArray[neighbors[n]].Mean[i]);
 				}
 
 				if (diff < minDiff)
@@ -152,46 +201,54 @@ namespace VectorizerLib
 					selectedNeighbor = n;
 				}
 			}
-			var neighbor = regionsArray[neighbors[selectedNeighbor]]; 
+			neighbor = neighbors[selectedNeighbor];
+			return true;
+		}
 
+		/// <summary>
+		/// Joins two regions and leaves only the first
+		/// </summary>
+		/// <param name="region"></param>
+		/// <param name="joined"></param>
+		/// <exception cref="NotImplementedException"></exception>
+		private void joinRegions(RegionData region, RegionData joined, List<ushort> neighbors)
+		{
 			foreach (var n in neighbors)
 			{
-				regionsArray[n].RemoveNeighbor(rr.Id);
-				if (n != neighbor.Id)
+				regionsArray[n].RemoveNeighbor(joined.Id);
+				if (n != region.Id)
 				{
-					regionsArray[n].AddNeighbor(neighbor.Id);
+					regionsArray[n].AddNeighbor(region.Id);
 
-					neighbor.AddNeighbor(n);
+					region.AddNeighbor(n);
 				}
 			}
 
-			iterator.ResetIterator(rr);
-			if (rr.Area == 1)
+			iterator.ResetIterator(joined);
+			if (joined.Area == 1)
 			{
-				board[iterator.GetPosition()] = neighbor.Id;
-				iterator.AppendPixelLocation(neighbor);
-				iterator.AppendCurrentPixelValuesToRegionData(neighbor);
+				board[iterator.GetPosition()] = region.Id;
+				iterator.AppendPixelLocation(region);
+				iterator.AppendCurrentPixelValuesToRegionData(region);
 			}
 			else
 			{
 
 				do
 				{
-					if (board[iterator.GetPosition()] == rr.Id)
+					if (board[iterator.GetPosition()] == joined.Id)
 					{
-						board[iterator.GetPosition()] = neighbor.Id;
-						iterator.AppendPixelLocation(neighbor);
-						iterator.AppendCurrentPixelValuesToRegionData(neighbor);
+						board[iterator.GetPosition()] = region.Id;
+						iterator.AppendPixelLocation(region);
+						iterator.AppendCurrentPixelValuesToRegionData(region);
 					}
 				}
 				while (iterator.Next());
 			}
 
-			neighbor.ComputeValues();
-			finishRegion(neighbor);
-			removeRegion(rr);
-
-			return true;
+			region.ComputeValues();
+			finishRegion(region);
+			removeRegion(joined);
 		}
 
 		void finishRegion(RegionData rdata)

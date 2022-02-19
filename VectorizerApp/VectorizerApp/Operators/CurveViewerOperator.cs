@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +19,25 @@ namespace VectorizerApp.Operators
 
 		Viewer viewer;
 		CanvasGeometry[] geometries;
-		List<Color> colorvalues;
+		Color[] colorvalues;
 
 		int width, height;
 		CanvasStrokeStyle hairline = new CanvasStrokeStyle()
 		{
 			TransformBehavior = CanvasStrokeTransformBehavior.Hairline
 		};
+		private bool fillGeometries;
+		private MainWindow mainWindow;
+
+		public bool FillGeometries
+		{ 
+			get => fillGeometries;
+			set 
+			{ 
+				fillGeometries = value; 
+				viewer.Invalidate();
+			}
+		}
 
 		public CurveViewerOperator(Viewer viewer, Context context)
 		{
@@ -41,6 +54,7 @@ namespace VectorizerApp.Operators
 
 
 			geometries = new CanvasGeometry[Context.FittingResult.Regions.Count];
+			colorvalues = new Color[Context.FittingResult.Regions.Count];
 			int i = 0;
 			foreach (var region in Context.FittingResult.Regions)
 			{
@@ -65,6 +79,10 @@ namespace VectorizerApp.Operators
 				cpb.EndFigure(region.IsClosed ? CanvasFigureLoop.Closed : CanvasFigureLoop.Open);
 
 				geometries[i] = CanvasGeometry.CreatePath(cpb);
+
+				var mean = Context.RegionizationResult.Regions[region.Index].Mean;
+				var color = Color.FromArgb((byte)mean[3], (byte)mean[2], (byte)mean[1], (byte)mean[0]);
+				colorvalues[i] = color;
 				i++;
 			}
 
@@ -73,17 +91,37 @@ namespace VectorizerApp.Operators
 		public void Draw(DrawingArgs args)
 		{
 			args.Session.DrawImage(Context.OriginalBitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
-			int i = 0;
-			foreach (var g in geometries)
+
+			if (FillGeometries)
 			{
-				args.Session.DrawGeometry(g, Colors.Red, 1, hairline);
-				i++;
+				int i = 0;
+				foreach (var g in geometries)
+				{
+					args.Session.FillGeometry(g, colorvalues[i]);
+					i++;
+				}
+			}
+			else
+			{
+				foreach (var g in geometries)
+				{
+					args.Session.DrawGeometry(g, Colors.Red, 1, hairline);
+				}
 			}
 		}
 
 		public void SetWindow(MainWindow mainWindow)
 		{
+			this.mainWindow = mainWindow;
 
+			StackPanel sp = new StackPanel();
+			mainWindow.SetRightPanel(sp);
+
+			ToggleSwitch ts = new ToggleSwitch();
+			ts.Header = "Wypełnione";
+			ts.Toggled += (s, e) => { FillGeometries = ts.IsOn; };
+			ts.IsOn = FillGeometries;
+			sp.Children.Add(ts);
 		}
 		public bool PointerPressed(PointerArgs args)
 		{
@@ -102,7 +140,7 @@ namespace VectorizerApp.Operators
 
 		public void PointerDoubleClick(PointerArgs args)
 		{
-			
+
 		}
 	}
 }

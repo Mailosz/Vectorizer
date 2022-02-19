@@ -12,7 +12,7 @@ namespace VectorizerLib
 		int Y1 { get; set; }
 		int Y2 { get; set; }
 		long Area { get; set; }
-		double SplitValue { get; }
+		double SplitValue { get; set; }
 		bool IsFinal { get; set; }
 
 		float[] Mean { get; set; }
@@ -23,6 +23,7 @@ namespace VectorizerLib
 		IEnumerable<ushort> GetNeighbors();
 		void ComputeValues();
 		void AppendPixelLocation(int x, int y);
+		void CopyValuesFrom(IRegionData region);
 	}
 
 	public abstract class RegionDataBase : IRegionData
@@ -37,7 +38,7 @@ namespace VectorizerLib
 
 		internal long area;
 		public long Area { get => area; set { area = value; } }
-		public double SplitValue { get; protected set; }
+		public double SplitValue { get; set; }
 
 		public BitArray neighbors = new BitArray(ushort.MaxValue);
 
@@ -90,6 +91,8 @@ namespace VectorizerLib
 				}
 			}
 		}
+
+		public abstract void CopyValuesFrom(IRegionData region);
 	}
 
 

@@ -24,10 +24,10 @@ namespace VectorizerLib
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				Mean[i] = (float)(mean[i] /area);
+				Mean[i] = (float)(mean[i]);
 			}
 
-			Color = System.Drawing.Color.FromArgb((int)Mean[0], (int)Mean[1], (int)Mean[2], (int)Mean[3]);
+			Color = System.Drawing.Color.FromArgb((int)Mean[3], (int)Mean[0], (int)Mean[1], (int)Mean[2]);
 
 			/*for (int a = 0; a < 4; a++)
 			{
@@ -65,6 +65,12 @@ namespace VectorizerLib
 			}
 
 			SplitValue = eigenValue * Math.Log2(area);
+		}
+
+		public override void CopyValuesFrom(IRegionData region)
+		{
+			this.Mean = region.Mean;
+			this.SplitValue = region.SplitValue;
 		}
 	}
 }

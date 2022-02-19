@@ -257,7 +257,7 @@ namespace VectorizerLib
 			if (rAbove.Area == 0)
 			{
 				rBelow.IsFinal = true;
-				rBelow.ComputeValues();
+				rBelow.CopyValuesFrom(region);
 
 				foreach (var n in region.GetNeighbors())
 				{
@@ -270,7 +270,7 @@ namespace VectorizerLib
 			else if (rBelow.Area == 0)
 			{
 				rAbove.IsFinal = true;
-				rAbove.ComputeValues();
+				rAbove.CopyValuesFrom(region);
 
 				foreach (var n in region.GetNeighbors())
 				{

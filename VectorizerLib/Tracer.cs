@@ -202,6 +202,12 @@ namespace VectorizerLib
 				}
 				else
 				{
+					if (checkRegions.Length > 1)
+					{
+						TracedRegion tr = getOrCreateTracedRegion(checkRegions[1]);
+						if (arrow.Params.HasFlag(ArrowParams.HasBoth)) tr.Edges.Add(edge);
+					}
+
 					foreach (var ar in arrows)
 					{
 						if (ar.X == arrow.X && ar.Y == arrow.Y && ar.Left == arrow.Right && ar.Right == arrow.Left && ar.Params.HasFlag(ArrowParams.HasBoth) == arrow.Params.HasFlag(ArrowParams.HasBoth))

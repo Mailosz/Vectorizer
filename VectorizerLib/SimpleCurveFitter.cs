@@ -52,49 +52,52 @@ namespace VectorizerLib
 			Vector2 curPoint;
 
 			IEnumerator<Vector2> pointsEnumerator = first.SimplifiedPoints.AsEnumerable().GetEnumerator();
-			bool lastAcute = true;
+			bool lastAcute = false;
+			if (pointsEnumerator.MoveNext())
+			{
+				curPoint = pointsEnumerator.Current;
+			}
+			else 
+			{
+				curPoint = curend.ToVector2();
+				if (!findNextEdge())
+				{
+					Console.WriteLine("TOOSHORT");
+					return result;
+				}
+			}
 
 			do
 			{
-				
+
+				while (pointsEnumerator.MoveNext())
+				{
+					computePathElement(prevPoint, curPoint, pointsEnumerator.Current);
+
+					prevPoint = curPoint;
+					curPoint = pointsEnumerator.Current;
+				}
+				computePathElement(prevPoint, curPoint, curend.ToVector2());
+				prevPoint = curPoint;
+				curPoint = curend.ToVector2();
+
+				// find next edge
+				if (!findNextEdge()) break;
+
+				Vector2 nextPoint;
 				if (pointsEnumerator.MoveNext())
 				{
-					curPoint = pointsEnumerator.Current;
-
-					while (pointsEnumerator.MoveNext())
-					{
-						computePathElement(prevPoint, curPoint, pointsEnumerator.Current);
-
-						prevPoint = curPoint;
-						curPoint = pointsEnumerator.Current;
-					}
-					computePathElement(prevPoint, curPoint, curend.ToVector2());
+					nextPoint = pointsEnumerator.Current;
 				}
 				else
 				{
-
+					nextPoint = curend.ToVector2();
+					if (!findNextEdge()) break;
 				}
-
-				
-
-				prevPoint = curend.ToVector2();
-				// finish
-				if (curend == first.Start)
-				{
-					result.IsClosed = true;
-					break;
-				}
-				
-				// find next edge
-				if (findNextEdge())
-				{
-					continue;
-				}
-
-				// finish without making loop
-
-				Console.WriteLine("Open region");
-				break;
+				computePathElement(prevPoint, curPoint, nextPoint);
+				prevPoint = curPoint;
+				curPoint = nextPoint;
+				continue;
 			} 
 			while (true);
 
@@ -103,7 +106,7 @@ namespace VectorizerLib
 
 			return result;
 
-			void computePathElement(Vector2 point1, Vector2 point2, Vector2 point3)
+			Vector2 computePathElement(Vector2 point1, Vector2 point2, Vector2 point3)
 			{
 				var dir1 = VectorHelper.Direction(point1, point2);
 				var dir2 = VectorHelper.Direction(point2, point3);
@@ -121,20 +124,22 @@ namespace VectorizerLib
 
 					var dir = VectorHelper.Direction(point1, point3);
 
-
+					var lastPoint = point2 + (point3 - point2) / 2;
 					addPathElement(PathElementType.Cubic,
 							point2 - (new Vector2(MathF.Cos(dir1), MathF.Sin(dir1)) * dis1 / 4),
 							point2 + (new Vector2(MathF.Cos(dir2), MathF.Sin(dir2)) * dis2 / 4),
-							point2 + (point3 - point2) / 2);
+							lastPoint);
 
 
 					lastAcute = false;
+					return lastPoint;
 				}
 				else
 				{
 					addPathElement(PathElementType.Line, point2);
 
 					lastAcute = true;
+					return point2;
 				}
 			}
 
@@ -149,6 +154,15 @@ namespace VectorizerLib
 
 			bool findNextEdge()
 			{
+				if (curend == first.Start)
+				{
+					var nextPoint = first.Points.Length == 0 ? first.End.ToVector2() : first.Points[0];
+					result.Start = computePathElement(prevPoint, curPoint, nextPoint);
+
+					result.IsClosed = true;
+					return false;
+				}
+
 				foreach (var edge in edges)
 				{
 					if (edge.Start == curend)

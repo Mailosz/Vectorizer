@@ -28,13 +28,24 @@ namespace VectorizerApp.Operators
 		};
 		private bool fillGeometries;
 		private MainWindow mainWindow;
+		private bool showBackground = true;
 
 		public bool FillGeometries
-		{ 
+		{
 			get => fillGeometries;
-			set 
-			{ 
-				fillGeometries = value; 
+			set
+			{
+				fillGeometries = value;
+				viewer.Invalidate();
+			}
+		}
+
+		public bool ShowBackground 
+		{ 
+			get => showBackground; 
+			set
+			{
+				showBackground = value;
 				viewer.Invalidate();
 			}
 		}
@@ -60,7 +71,6 @@ namespace VectorizerApp.Operators
 			{
 				CanvasPathBuilder cpb = new CanvasPathBuilder(viewer.Device);
 
-				bool isfigureclosed = false;
 				cpb.BeginFigure(region.Start);
 				foreach (var elem in region.Path)
 				{
@@ -90,7 +100,10 @@ namespace VectorizerApp.Operators
 
 		public void Draw(DrawingArgs args)
 		{
-			args.Session.DrawImage(Context.OriginalBitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
+			if (ShowBackground)
+			{
+				args.Session.DrawImage(Context.OriginalBitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
+			}
 
 			if (FillGeometries)
 			{
@@ -117,11 +130,17 @@ namespace VectorizerApp.Operators
 			StackPanel sp = new StackPanel();
 			mainWindow.SetRightPanel(sp);
 
-			ToggleSwitch ts = new ToggleSwitch();
-			ts.Header = "Wypełnione";
-			ts.Toggled += (s, e) => { FillGeometries = ts.IsOn; };
-			ts.IsOn = FillGeometries;
-			sp.Children.Add(ts);
+			ToggleSwitch ts1 = new ToggleSwitch();
+			ts1.Header = "Wypełnione";
+			ts1.Toggled += (s, e) => { FillGeometries = ts1.IsOn; };
+			ts1.IsOn = FillGeometries;
+			sp.Children.Add(ts1);
+
+			ToggleSwitch ts2 = new ToggleSwitch();
+			ts2.Header = "Pokaż obrazek";
+			ts2.Toggled += (s, e) => { ShowBackground = ts2.IsOn; };
+			ts2.IsOn = ShowBackground;
+			sp.Children.Add(ts2);
 		}
 		public bool PointerPressed(PointerArgs args)
 		{

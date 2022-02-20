@@ -44,15 +44,20 @@ namespace VectorizerLib
 
 			var edges = new List<TracedEdge>(region.Edges);
 			var first = edges.First();
+			var curEdge = first;
+			TracedEdge prevEdge = first;
 			edges.Remove(first);
 
 			var curend = first.End;
 			Vector2 prevPoint = first.Start.ToVector2();
 			result.Start = prevPoint;
 			Vector2 curPoint;
+			TracedNode curNode = first.Start;
 
 			IEnumerator<Vector2> pointsEnumerator = first.SimplifiedPoints.AsEnumerable().GetEnumerator();
 			bool lastAcute = false;
+			//read secod point
+			bool fitNode = false;
 			if (pointsEnumerator.MoveNext())
 			{
 				curPoint = pointsEnumerator.Current;
@@ -70,31 +75,38 @@ namespace VectorizerLib
 			do
 			{
 
+				//fitting edge
 				while (pointsEnumerator.MoveNext())
 				{
-					computePathElement(prevPoint, curPoint, pointsEnumerator.Current);
+					if (fitNode)
+					{
+						computeNodePathElement(prevPoint, curNode, pointsEnumerator.Current, prevEdge, curEdge);
+					}
+					else
+					{
+						computePathElement(prevPoint, curPoint, pointsEnumerator.Current);
+					}
 
 					prevPoint = curPoint;
 					curPoint = pointsEnumerator.Current;
+
+					fitNode = false;
 				}
-				computePathElement(prevPoint, curPoint, curend.ToVector2());
-				prevPoint = curPoint;
-				curPoint = curend.ToVector2();
+				var nextPoint = curend.ToVector2();
+				if (fitNode)
+				{
+					computeNodePathElement(prevPoint, curNode, nextPoint, prevEdge, curEdge);
+				}
+				else
+				{
+					computePathElement(prevPoint, curPoint, nextPoint);
+					prevPoint = curPoint;
+					curPoint = curend.ToVector2();
+				}
 
 				// find next edge
 				if (!findNextEdge()) break;
 
-				Vector2 nextPoint;
-				if (pointsEnumerator.MoveNext())
-				{
-					nextPoint = pointsEnumerator.Current;
-				}
-				else
-				{
-					nextPoint = curend.ToVector2();
-					if (!findNextEdge()) break;
-				}
-				computePathElement(prevPoint, curPoint, nextPoint);
 				prevPoint = curPoint;
 				curPoint = nextPoint;
 				continue;
@@ -106,41 +118,126 @@ namespace VectorizerLib
 
 			return result;
 
+			Vector2 computeNodePathElement(Vector2 prevPoint, TracedNode node, Vector2 nextPoint, TracedEdge prevEdge, TracedEdge nextEdge)
+			{
+				if (node.IsBorder)
+				{
+					addPathElement(PathElementType.Line, node.ToVector2());
+					lastAcute = true;
+					return node.ToVector2();
+				}
+				else
+				{
+					float diff = findSmoothest(node, out int smooth1, out int smooth2);
+
+					if (computeAcuteness(diff)) // acute
+					{
+						addPathElement(PathElementType.Line, node.ToVector2());
+						lastAcute=true;
+						return node.ToVector2();
+					}
+					else // smooth
+					{
+						var edge1 = node.Edges[smooth1];
+						var edge2 = node.Edges[smooth2];
+						if ((edge1 == prevEdge && edge2 == nextEdge)
+							|| (edge2 == prevEdge && edge1 == nextEdge))
+						{
+							//this is the smoothest route
+							return computePathElement(prevPoint, node.ToVector2(), nextPoint);
+						}
+						else
+						{
+							var (point1, point3) = getOutgoingPoints(edge1, node, edge2);
+							var point2 = node.ToVector2();
+
+							var start = point1 + (point2 - point1) / 2;
+							var (cp1, cp2, lastPoint) = getCurveControlPoints(point1, point2, point3);
+
+							var hp1 = start + (cp1 - start) / 2;
+							var hp2 = cp1 + (cp2 - cp1) / 2;
+							var hp3 = cp2 + (lastPoint - cp2) / 2;
+
+							var hp4 = hp1 + (hp2 - hp1) / 2;
+							var hp5 = hp2 + (hp3 - hp2) / 2;
+
+							var halfpoint = hp4 + (hp5 - hp4) / 2;
+
+
+							addPathElement(PathElementType.Line, halfpoint);
+
+							if (nextEdge == edge1)
+							{
+								addPathElement(PathElementType.Cubic, hp4, hp1, start);
+
+								lastAcute = false;
+								return start;
+							} 
+							else if (nextEdge == edge2)
+							{
+								addPathElement(PathElementType.Cubic, hp5, hp3, lastPoint);
+
+								lastAcute = false;
+
+								return lastPoint;
+							}
+							else
+							{
+								lastAcute = true;
+
+								return halfpoint;
+							}
+						}
+					}
+				}
+			}
+
 			Vector2 computePathElement(Vector2 point1, Vector2 point2, Vector2 point3)
 			{
-				var dir1 = VectorHelper.Direction(point1, point2);
-				var dir2 = VectorHelper.Direction(point2, point3);
+				var dir1 = Helper.Direction(point1, point2);
+				var dir2 = Helper.Direction(point2, point3);
 				var dis1 = Vector2.Distance(point1, point2);
 				var dis2 = Vector2.Distance(point2, point3);
 
-				float dif = dir2 - dir1;
+				float dif = Helper.Angle(dir2, dir1);
 
-				if (dif < properties.FittingAcuteAngle)
+				bool acute = computeAcuteness(dif);
+				if (acute)
+				{
+					addPathElement(PathElementType.Line, point2);
+					lastAcute = acute;
+					return point2;
+				}
+				else
 				{
 					if (lastAcute)
 					{
 						addPathElement(PathElementType.Line, point1 + (point2 - point1) / 2);
 					}
+					var (cp1, cp2, lastPoint) = getCurveControlPoints(point1, point2, point3);
+					addPathElement(PathElementType.Cubic, cp1, cp2, lastPoint);
 
-					var dir = VectorHelper.Direction(point1, point3);
-
-					var lastPoint = point2 + (point3 - point2) / 2;
-					addPathElement(PathElementType.Cubic,
-							point2 - (new Vector2(MathF.Cos(dir1), MathF.Sin(dir1)) * dis1 / 4),
-							point2 + (new Vector2(MathF.Cos(dir2), MathF.Sin(dir2)) * dis2 / 4),
-							lastPoint);
-
-
-					lastAcute = false;
+					lastAcute = acute;
 					return lastPoint;
 				}
-				else
-				{
-					addPathElement(PathElementType.Line, point2);
 
-					lastAcute = true;
-					return point2;
-				}
+			}
+
+			PathElement createCubicPathElement(Vector2 point1, Vector2 point2, Vector2 point3, float dir1, float dir2, float dis1, float dis2)
+			{
+
+				var lastPoint = point2 + (point3 - point2) / 2;
+
+				var element = new PathElement()
+				{
+					ElementType = PathElementType.Cubic,
+					Coords = new[] {
+						point2 - (new Vector2(MathF.Cos(dir1), MathF.Sin(dir1)) * dis1 / 4),
+						point2 + (new Vector2(MathF.Cos(dir2), MathF.Sin(dir2)) * dis2 / 4),
+						lastPoint}
+				};
+				return element;
+
 			}
 
 			void addPathElement(PathElementType type, params Vector2[] coords)
@@ -154,15 +251,19 @@ namespace VectorizerLib
 
 			bool findNextEdge()
 			{
+				prevEdge = curEdge;
+				fitNode = true;
+				curNode = curend;
 				if (curend == first.Start)
 				{
+					curEdge = first;
 					var nextPoint = first.Points.Length == 0 ? first.End.ToVector2() : first.Points[0];
-					result.Start = computePathElement(prevPoint, curPoint, nextPoint);
+					result.Start = computeNodePathElement(prevPoint, curend, nextPoint, prevEdge, curEdge);
 
 					result.IsClosed = true;
 					return false;
 				}
-
+				
 				foreach (var edge in edges)
 				{
 					if (edge.Start == curend)
@@ -170,6 +271,7 @@ namespace VectorizerLib
 						edges.Remove(edge);
 						pointsEnumerator = edge.SimplifiedPoints.AsEnumerable().GetEnumerator();
 						curend = edge.End;
+						curEdge = edge;
 						return true;
 					}
 					else if (edge.End == curend) // found, but backwards
@@ -177,11 +279,64 @@ namespace VectorizerLib
 						edges.Remove(edge);
 						pointsEnumerator = edge.SimplifiedPoints.Reverse().GetEnumerator();
 						curend = edge.Start;
+						curEdge = edge;
 						return true;
 					}
 				}
 				return false;
 			}
+		}
+
+		private bool computeAcuteness(float dif)
+		{
+			return dif > properties.FittingAcuteAngle;
+		}
+
+		private (Vector2, Vector2, Vector2) getCurveControlPoints(Vector2 point1, Vector2 point2, Vector2 point3)
+		{
+			return (point2 + (point1 - point2) / 4,
+							point2 + (point3 - point2) / 4,
+							point2 + (point3 - point2) / 2);
+		}
+
+		private (Vector2, Vector2) getOutgoingPoints(TracedEdge edge1, TracedNode node, TracedEdge edge2)
+		{
+			Vector2 point1, point2;
+			if (edge1.End == node)
+			{
+				if (edge1.SimplifiedPoints.Length > 0)
+				{
+					point1 = edge1.SimplifiedPoints.Last();
+				}
+				else point1 = edge1.Start.ToVector2();
+			}
+			else
+			{
+				if (edge1.SimplifiedPoints.Length > 0)
+				{
+					point1 = edge1.SimplifiedPoints.First();
+				}
+				else point1 = edge1.End.ToVector2();
+			}
+
+			if (edge2.Start == node)
+			{
+				if (edge2.SimplifiedPoints.Length > 0)
+				{
+					point2 = edge2.SimplifiedPoints.First();
+				}
+				else point2 = edge2.End.ToVector2();
+			}
+			else
+			{
+				if (edge2.SimplifiedPoints.Length > 0)
+				{
+					point2 = edge2.SimplifiedPoints.Last();
+				}
+				else point2 = edge2.Start.ToVector2();
+			}
+
+			return (point1, point2);
 		}
 
 		private float findSmoothest(TracedNode node, out int edge1, out int edge2)
@@ -209,54 +364,28 @@ namespace VectorizerLib
 
 			float checkSmoothness(TracedEdge edge1, TracedEdge edge2)
 			{
-				Vector2 point1, point2;
-				if (edge1.End == node)
-				{
-					if (edge1.Points.Length > 0)
-					{
-						point1 = edge1.Points.Last();
-					}
-					else point1 = edge1.Start.ToVector2();
-				}
-				else
-				{
-					if (edge1.Points.Length > 0)
-					{
-						point1 = edge1.Points.First();
-					}
-					else point1 = edge1.End.ToVector2();
-				}
+				var (point1, point2) = getOutgoingPoints(edge1, node, edge2);
 
-				if (edge2.Start == node)
-				{
-					if (edge2.Points.Length > 0)
-					{
-						point2 = edge2.Points.First();
-					}
-					else point2 = edge2.End.ToVector2();
-				}
-				else
-				{
-					if (edge2.Points.Length > 0)
-					{
-						point2 = edge2.Points.Last();
-					}
-					else point2 = edge2.Start.ToVector2();
-				}
+				float dir1 = Helper.Direction(point1, node.ToVector2());
+				float dir2 = Helper.Direction(node.ToVector2(), point2);
 
-				float dir1 = VectorHelper.Direction(point1, node.ToVector2());
-				float dir2 = VectorHelper.Direction(node.ToVector2(), point2);
-
-				return dir2 - dir1;
+				return Helper.Angle(dir2, dir1);
 			}
 		}
 	}
 
-	public static class VectorHelper
+	public static class Helper
 	{
 		public static float Direction(Vector2 v1, Vector2 v2)
 		{
 			return MathF.Atan2(v2.Y - v1.Y, v2.X - v1.X);
+		}
+
+
+		public static float Angle(float angle1, float angle2)
+		{
+			var angle = (angle2 - angle1) + MathF.PI;
+			return Math.Abs(angle - MathF.Floor(angle / (MathF.PI*2)) * (MathF.PI*2) - MathF.PI);
 		}
 	}
 }

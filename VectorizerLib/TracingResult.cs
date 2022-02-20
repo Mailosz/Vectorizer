@@ -36,7 +36,9 @@ namespace VectorizerLib
 		public List<TracedEdge> Edges { get; set; } = new List<TracedEdge>(4);
 		public int X { get; set; }
 		public int Y { get; set; }
-		public SmoothRoute SmoothRoute = SmoothRoute.Unknown;
+		public bool IsBorder { get; internal set; }
+
+		public byte SmoothRoutes { get; set; }
 
 		internal Vector2 ToVector2() => new Vector2(X, Y);
 
@@ -44,10 +46,5 @@ namespace VectorizerLib
 		{
 			return "{" + X.ToString() + ", " + Y.ToString() + "}";
 		}
-	}
-
-	public enum SmoothRoute : byte
-	{
-		Unknown, None, FirstSecond, FirstThird, FirstForth, SecondThird, SecondForthd, ThirdForth
 	}
 }

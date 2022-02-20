@@ -83,6 +83,14 @@ namespace VectorizerLib
 					traceOneEdge(arrow);
 			}
 
+			foreach (var node in allNodes)
+			{
+				if (node.X == 0 || node.Y == 0 || node.X == poster.Width || node.Y == poster.Height)
+				{
+					node.IsBorder = true;
+				}
+			}
+
 			return new TracingResult()
 			{
 				Regions = regions,
@@ -117,7 +125,7 @@ namespace VectorizerLib
 			TracedRegion ntr = new TracedRegion();
 			regions.Add(cornerregion, ntr);
 			TracedNode cornernode = new TracedNode();
-			cornernode.SmoothRoute = SmoothRoute.FirstSecond;
+			cornernode.IsBorder = true;
 			allNodes.Add(cornernode);
 			ntr.Nodes.Add(cornernode);
 
@@ -171,16 +179,17 @@ namespace VectorizerLib
 			/// </summary>
 			/// <param name="arrow"></param>
 			/// <returns>True if node created (false means this point has already been reached, don't create new arrows)</returns>
-			bool finishEdgeWithNode(Arrow arrow, params ushort[] checkRegions)
+			bool finishEdgeWithNode(Arrow arrow, out TracedNode node, params ushort[] checkRegions)
 			{
 				allEdges.Add(edge);
 
 				TracedRegion nregion = getOrCreateTracedRegion(checkRegions.First());
 				nregion.Edges.Add(edge);
 
-				bool created = findOrCreateNode(arrow.X, arrow.Y, nregion.Nodes, out TracedNode node);
+				bool created = findOrCreateNode(arrow.X, arrow.Y, nregion.Nodes, out node);
 
 				node.Edges.Add(edge);
+				arrow.Node.Edges.Add(edge);
 				arrow.Node = node;
 
 				if (created)
@@ -258,7 +267,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
+								if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -267,7 +276,7 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Left = arrow.Left,
 										Params = createArrowParams(false, false, false, false),
-										Node = arrow.Node,
+										Node = node,
 									});
 
 									//new arrow rightward
@@ -277,9 +286,11 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Right = arrow.Right,
 										Params = createArrowParams(false, true, false, true),
-										Node = arrow.Node,
+										Node = node,
 									});
+									
 								}
+								node.IsBorder = true;
 								return false;
 							}
 							else //corner
@@ -287,16 +298,36 @@ namespace VectorizerLib
 								if (arrow.Params.HasFlag(ArrowParams.HasOnlyRight))
 								{
 									//turn right
-									arrow.Params = createArrowParams(false, true, false, true);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Right))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Right = arrow.Right,
+											Params = createArrowParams(false, true, false, true),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
 								}
 								else
 								{
 									//turn left
-									arrow.Params = createArrowParams(false, false, false, false);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Left = arrow.Left,
+											Params = createArrowParams(false, false, false, false),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
 								}
-								return true;
+								return false;
 							}
 						}
 						else
@@ -313,7 +344,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
+								if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -322,7 +353,7 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Left = arrow.Left,
 										Params = createArrowParams(false, true, false, false),
-										Node = arrow.Node,
+										Node = node,
 									});
 
 									//new arrow rightward
@@ -332,9 +363,11 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Right = arrow.Right,
 										Params = createArrowParams(false, false, false, true),
-										Node = arrow.Node,
+										Node = node,
 									});
+									
 								}
+								node.IsBorder = true;
 								return false;
 							}
 							else //corner
@@ -342,16 +375,37 @@ namespace VectorizerLib
 								if (arrow.Params.HasFlag(ArrowParams.HasOnlyRight))
 								{
 									//turn right
-									arrow.Params = createArrowParams(false, false, false, true);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Right))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Right = arrow.Right,
+											Params = createArrowParams(false, false, false, true),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
+									
 								}
 								else
 								{
 									//turn left
-									arrow.Params = createArrowParams(false, true, false, false);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Left = arrow.Left,
+											Params = createArrowParams(false, true, false, false),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
 								}
-								return true;
+								return false;
 							}							
 						}
 						else
@@ -371,7 +425,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
+								if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -380,7 +434,7 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Left = arrow.Left,
 										Params = createArrowParams(true, true, false, false),
-										Node = arrow.Node,
+										Node = node,
 									});
 
 									//new arrow rightward
@@ -390,9 +444,11 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Right = arrow.Right,
 										Params = createArrowParams(true, false, false, true),
-										Node = arrow.Node,
+										Node = node,
 									});
+									
 								}
+								node.IsBorder = true;
 								return false;
 							}
 							else //corner
@@ -400,16 +456,37 @@ namespace VectorizerLib
 								if (arrow.Params.HasFlag(ArrowParams.HasOnlyRight))
 								{
 									//turn right
-									arrow.Params = createArrowParams(true, false, false, true);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Right))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Right = arrow.Right,
+											Params = createArrowParams(true, false, false, true),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
+
 								}
 								else
 								{
 									//turn left
-									arrow.Params = createArrowParams(true, true, false, false);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Left = arrow.Left,
+											Params = createArrowParams(true, true, false, false),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
 								}
-								return true;
+								return false;
 							}
 						}
 						else
@@ -426,7 +503,7 @@ namespace VectorizerLib
 						{
 							if (arrow.Params.HasFlag(ArrowParams.HasBoth))//split at the edge of the board
 							{
-								if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right))
+								if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right))
 								{
 									//new arrow leftward
 									arrows.Enqueue(new Arrow()
@@ -435,7 +512,7 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Left = arrow.Left,
 										Params = createArrowParams(true, false, false, false),
-										Node = arrow.Node,
+										Node = node,
 									});
 
 									//new arrow rightward
@@ -445,9 +522,11 @@ namespace VectorizerLib
 										Y = arrow.Y,
 										Right = arrow.Right,
 										Params = createArrowParams(true, true, false, true),
-										Node = arrow.Node,
+										Node = node,
 									});
+									
 								}
+								node.IsBorder = true;
 								return false;
 							}
 							else //corner
@@ -455,16 +534,36 @@ namespace VectorizerLib
 								if (arrow.Params.HasFlag(ArrowParams.HasOnlyRight))
 								{
 									//turn right
-									arrow.Params = createArrowParams(true, true, false, true);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Right))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Right = arrow.Right,
+											Params = createArrowParams(true, true, false, true),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
 								}
 								else
 								{
 									//turn left
-									arrow.Params = createArrowParams(true, false, false, false);
-									pointsList.Add(new Vector2(arrow.X, arrow.Y));
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left))
+									{
+										arrows.Enqueue(new Arrow()
+										{
+											X = arrow.X,
+											Y = arrow.Y,
+											Left = arrow.Left,
+											Params = createArrowParams(true, false, false, false),
+											Node = node,
+										});
+										node.IsBorder = true;
+									}
 								}
-								return true;
+								return false;
 							}
 						}
 						else
@@ -482,7 +581,7 @@ namespace VectorizerLib
 				bool arrowRegionsCheck(bool horizontal, bool forward, Arrow arrow)
 				{
 					ushort left, right;
-					void addLeftwardArrow()
+					void addLeftwardArrow(TracedNode node)
 					{
 						arrows.Enqueue(new Arrow()
 						{
@@ -491,10 +590,10 @@ namespace VectorizerLib
 							Left = arrow.Left,
 							Right = left,
 							Params = createArrowParams(!horizontal, horizontal != forward, true, false),
-							Node = arrow.Node,
+							Node = node,
 						});
 					}
-					void addForwardArrow()
+					void addForwardArrow(TracedNode node)
 					{
 						arrows.Enqueue(new Arrow()
 						{
@@ -503,10 +602,10 @@ namespace VectorizerLib
 							Left = left,
 							Right = right,
 							Params = createArrowParams(horizontal, forward, true, false),
-							Node = arrow.Node,
+							Node = node,
 						});
 					}
-					void addRightwardArrow()
+					void addRightwardArrow(TracedNode node)
 					{
 						arrows.Enqueue(new Arrow()
 						{
@@ -515,7 +614,7 @@ namespace VectorizerLib
 							Left = right,
 							Right = arrow.Right,
 							Params = createArrowParams(!horizontal, horizontal == forward, true, false),
-							Node = arrow.Node,
+							Node = node,
 						});
 					}
 					int position = arrow.X + arrow.Y * poster.Width;
@@ -541,10 +640,10 @@ namespace VectorizerLib
 								}
 								else // change on the left
 								{
-									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, left))
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right, left))
 									{
-										addLeftwardArrow();
-										addForwardArrow();
+										addLeftwardArrow(node);
+										addForwardArrow(node);
 									}
 									return false;
 								}
@@ -563,10 +662,10 @@ namespace VectorizerLib
 								}
 								else // change on the right
 								{
-									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, right))
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right, right))
 									{
-										addForwardArrow();
-										addRightwardArrow();
+										addForwardArrow(node);
+										addRightwardArrow(node);
 									}
 									return false;
 								}
@@ -575,20 +674,20 @@ namespace VectorizerLib
 							{
 								if (left == right) // single region ahead
 								{
-									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, left))
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right, left))
 									{
-										addLeftwardArrow();
-										addRightwardArrow();
+										addLeftwardArrow(node);
+										addRightwardArrow(node);
 									}
 									return false;
 								}
 								else // split into two regions ahead (4-way connection point)
 								{
-									if (finishEdgeWithNode(arrow, arrow.Left, arrow.Right, left, right))
+									if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, arrow.Right, left, right))
 									{
-										addLeftwardArrow();
-										addForwardArrow();
-										addRightwardArrow();
+										addLeftwardArrow(node);
+										addForwardArrow(node);
+										addRightwardArrow(node);
 									}
 									return false;
 								}
@@ -604,7 +703,7 @@ namespace VectorizerLib
 						}
 						else // new region ahead
 						{
-							if (finishEdgeWithNode(arrow, arrow.Right, right))
+							if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Right, right))
 							{
 								//new arrow forward
 								arrows.Enqueue(new Arrow()
@@ -613,7 +712,7 @@ namespace VectorizerLib
 									Y = arrow.Y,
 									Right = right,
 									Params = createArrowParams(horizontal, forward, false, true),
-									Node = arrow.Node,
+									Node = node,
 								});
 
 								//new arrow rightward
@@ -624,7 +723,7 @@ namespace VectorizerLib
 									Left = right,
 									Right = arrow.Right,
 									Params = createArrowParams(!horizontal, horizontal == forward, true, false),
-									Node = arrow.Node,
+									Node = node,
 								});
 							}
 
@@ -640,7 +739,7 @@ namespace VectorizerLib
 						}
 						else // new region ahead
 						{
-							if (finishEdgeWithNode(arrow, arrow.Left, left))
+							if (finishEdgeWithNode(arrow, out TracedNode node, arrow.Left, left))
 							{
 								//new arrow leftward
 								arrows.Enqueue(new Arrow()
@@ -650,7 +749,7 @@ namespace VectorizerLib
 									Left = arrow.Left,
 									Right = left,
 									Params = createArrowParams(!horizontal, horizontal != forward, true, false),
-									Node = arrow.Node,
+									Node = node,
 								});
 
 								//new arrow forward
@@ -660,7 +759,7 @@ namespace VectorizerLib
 									Y = arrow.Y,
 									Left = left,
 									Params = createArrowParams(horizontal, forward, false, false),
-									Node = arrow.Node,
+									Node = node,
 								});
 							}
 							return false;

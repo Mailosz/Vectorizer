@@ -122,7 +122,7 @@ namespace VectorizerLib
 			for (int i = 0; i < regionsList.Count; i++)
 			{
 				var region = regionsList[i];
-				if (!tryFindClosestNeighbor(region, out ushort selectedNeighbor, out float minDiff, out List<ushort> neighbors)) continue;
+				if (!tryFindClosestNeighbor(region, out ushort selectedNeighbor, out float minDiff, out ushort[] neighbors)) continue;
 				var neighbor = regionsArray[selectedNeighbor];
 
 
@@ -135,7 +135,7 @@ namespace VectorizerLib
 					}
 					else
 					{
-						joinRegions(region, neighbor, new List<ushort>(neighbor.GetNeighbors()));
+						joinRegions(region, neighbor, neighbor.GetNeighbors().ToArray());
 						if (selectedNeighbor < i) { i--; }
 					}
 				}
@@ -171,7 +171,7 @@ namespace VectorizerLib
 			
 			
 			
-			if (!tryFindClosestNeighbor(rr, out ushort selectedNeighbor, out _, out List<ushort> neighbors)) return false;
+			if (!tryFindClosestNeighbor(rr, out ushort selectedNeighbor, out _, out var neighbors)) return false;
 			var neighbor = regionsArray[selectedNeighbor]; 
 
 			joinRegions(neighbor, rr, neighbors);
@@ -179,15 +179,15 @@ namespace VectorizerLib
 			return true;
 		}
 
-		private bool tryFindClosestNeighbor(RegionData region, out ushort neighbor, out float minDiff, out List<ushort> neighbors)
+		private bool tryFindClosestNeighbor(RegionData region, out ushort neighbor, out float minDiff, out ushort[] neighbors)
 		{
-			neighbors = new List<ushort>(region.GetNeighbors());
+			neighbors = region.GetNeighbors().ToArray();
 			neighbor = 0;
 			minDiff = float.PositiveInfinity;
-			if (neighbors.Count == 0) return false;
+			if (neighbors.Length == 0) return false;
 
 			int selectedNeighbor = 0;
-			for (int n = 0; n < neighbors.Count; n++)
+			for (int n = 0; n < neighbors.Length; n++)
 			{
 				float diff = 0f;
 				for (int i = 0; i < region.Mean.Length; i++)
@@ -211,7 +211,7 @@ namespace VectorizerLib
 		/// <param name="region"></param>
 		/// <param name="joined"></param>
 		/// <exception cref="NotImplementedException"></exception>
-		private void joinRegions(RegionData region, RegionData joined, List<ushort> neighbors)
+		private void joinRegions(RegionData region, RegionData joined, ushort[] neighbors)
 		{
 			foreach (var n in neighbors)
 			{
@@ -288,6 +288,8 @@ namespace VectorizerLib
 			var rAbove = createRegion();
 			var rBelow = createRegion();
 
+			bool anybelow = false, anyabove = false;
+
 			//TODO: instead of creating two new regions only create one -nah
 
 			iterator.ResetIterator(region);
@@ -298,11 +300,13 @@ namespace VectorizerLib
 					switch (iterator.CheckCurrentPixel(region))
 					{
 						case PixelValue.Above:
-							iterator.AppendPixelLocation(rAbove);
+							//iterator.AppendPixelLocation(rAbove);
+							anyabove = true;
 							board[iterator.GetPosition()] = rAbove.Id;
 							break;
 						case PixelValue.Below:
-							iterator.AppendPixelLocation(rBelow);
+							//iterator.AppendPixelLocation(rBelow);
+							anybelow = true;
 							board[iterator.GetPosition()] = rBelow.Id;
 							break;
 						default: throw new Exception("Illegal state");
@@ -311,7 +315,7 @@ namespace VectorizerLib
 			}
 			while (iterator.Next());
 
-			if (rAbove.Area == 0)
+			if (!anyabove)
 			{
 				rBelow.IsFinal = true;
 				rBelow.CopyValuesFrom(region);
@@ -324,7 +328,7 @@ namespace VectorizerLib
 				}
 				removeRegion(rAbove);
 			}
-			else if (rBelow.Area == 0)
+			else if (!anybelow)
 			{
 				rAbove.IsFinal = true;
 				rAbove.CopyValuesFrom(region);
@@ -378,6 +382,10 @@ namespace VectorizerLib
 
 			RegionData region = source.CreateRegionData();
 			region.Id = lastId;
+			if (lastId == 15548)
+			{
+				Console.WriteLine("FOUND");
+			}
 			// TODO: CAUTION, TESTS
 			region.X1 = int.MaxValue; region.Y1 = int.MaxValue; region.X2 = 0; region.Y2 = 0;
 			//
@@ -447,6 +455,7 @@ namespace VectorizerLib
 				nRegions.Add(frd);
 				paintPixel(searchpos, frd);
 				checkForNeighborsHorizontally(searchpos);
+				checkForNeighborsVertically(searchpos);
 
 				//selecting first line
 				for (searchpos++; searchpos < lineEnd; searchpos++)
@@ -665,6 +674,7 @@ namespace VectorizerLib
 					}
 					else
 					{
+						addNeighbors(frd.Region.Id, board[pos]);
 						addSeed(seedstart, pos - 1, direction);
 						while (true)
 						{

@@ -80,7 +80,7 @@ namespace VectorizerLib
 				{
 					if (fitNode)
 					{
-						computeNodePathElement(prevPoint, curNode, pointsEnumerator.Current, prevEdge, curEdge);
+						curPoint = computeNodePathElement(prevPoint, curNode, pointsEnumerator.Current, prevEdge, curEdge);
 					}
 					else
 					{
@@ -95,13 +95,11 @@ namespace VectorizerLib
 				var nextPoint = curend.ToVector2();
 				if (fitNode)
 				{
-					computeNodePathElement(prevPoint, curNode, nextPoint, prevEdge, curEdge);
+					curPoint = computeNodePathElement(prevPoint, curNode, nextPoint, prevEdge, curEdge);
 				}
 				else
 				{
 					computePathElement(prevPoint, curPoint, nextPoint);
-					prevPoint = curPoint;
-					curPoint = curend.ToVector2();
 				}
 
 				// find next edge
@@ -151,42 +149,61 @@ namespace VectorizerLib
 							var (point1, point3) = getOutgoingPoints(edge1, node, edge2);
 							var point2 = node.ToVector2();
 
-							var start = point1 + (point2 - point1) / 2;
+							var t = 0.5f;
+
+							var start = point1 + (point2 - point1) * t;
 							var (cp1, cp2, lastPoint) = getCurveControlPoints(point1, point2, point3);
 
-							var hp1 = start + (cp1 - start) / 2;
-							var hp2 = cp1 + (cp2 - cp1) / 2;
-							var hp3 = cp2 + (lastPoint - cp2) / 2;
+							var hp1 = start + (cp1 - start) * t;
+							var hp2 = cp1 + (cp2 - cp1) * t;
+							var hp3 = cp2 + (lastPoint - cp2) * t;
 
-							var hp4 = hp1 + (hp2 - hp1) / 2;
-							var hp5 = hp2 + (hp3 - hp2) / 2;
+							var hp4 = hp1 + (hp2 - hp1) * t;
+							var hp5 = hp2 + (hp3 - hp2) * t;
 
-							var halfpoint = hp4 + (hp5 - hp4) / 2;
+							var halfpoint = hp4 + (hp5 - hp4) * t;
 
 
-							addPathElement(PathElementType.Line, halfpoint);
+							
 
 							if (nextEdge == edge1)
 							{
+								addPathElement(PathElementType.Line, halfpoint);
 								addPathElement(PathElementType.Cubic, hp4, hp1, start);
 
 								lastAcute = false;
-								return start;
+								return halfpoint;
 							} 
 							else if (nextEdge == edge2)
 							{
+								addPathElement(PathElementType.Line, halfpoint);
 								addPathElement(PathElementType.Cubic, hp5, hp3, lastPoint);
 
 								lastAcute = false;
 
-								return lastPoint;
+								return halfpoint;
+							}
+							else if (prevEdge == edge1)
+							{
+								addPathElement(PathElementType.Cubic, hp1, hp4, halfpoint);
+								lastAcute = true;
+								return halfpoint;
+							}
+							else if (prevEdge == edge2)
+							{
+								addPathElement(PathElementType.Cubic, hp3, hp5, halfpoint);
+								lastAcute = true;
+								return halfpoint;
 							}
 							else
 							{
+
 								lastAcute = true;
 
 								return halfpoint;
 							}
+
+							return halfpoint;
 						}
 					}
 				}

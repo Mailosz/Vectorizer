@@ -71,6 +71,11 @@ namespace VectorizerLib
 		{
 			this.Mean = region.Mean;
 			this.SplitValue = region.SplitValue;
+			this.X1 = region.X1;
+			this.X2 = region.X2;
+			this.Y1 = region.Y1;
+			this.Y2 = region.Y2;
+			this.Area = region.Area;
 		}
 	}
 }

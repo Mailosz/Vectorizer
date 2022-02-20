@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -40,7 +41,8 @@ namespace VectorizerLib
 		public long Area { get => area; set { area = value; } }
 		public double SplitValue { get; set; }
 
-		public BitArray neighbors = new BitArray(ushort.MaxValue);
+		//public BitArray neighbors = new BitArray(ushort.MaxValue);
+		HashSet<ushort> neighbors = new HashSet<ushort>(32);
 
 		public Color Color { get; set; }
 
@@ -59,6 +61,11 @@ namespace VectorizerLib
 			else if (this.X2 < x) this.X2 = x;
 			if (this.Y1 > y) this.Y1 = y;
 			else if (this.Y2 < y) this.Y2 = y;
+
+			if (x == 0 && this.Id == 15548)
+			{
+				Console.WriteLine("FOUND");
+			}
 		}
 
 		public override string ToString()
@@ -68,28 +75,36 @@ namespace VectorizerLib
 
 		public void AddNeighbor(ushort id)
 		{
-			neighbors[id] = true;
+			//neighbors[id] = true;
+			neighbors.Add(id);
+			if (this.Id ==15548 && id == 21398)
+			{
+				Console.WriteLine("FOUND");
+			}
 		}
 
 		public void RemoveNeighbor(ushort id)
 		{
-			neighbors[id] = false;
+			//neighbors[id] = false;
+			neighbors.Remove(id);
 		}
 
 		public bool isNeighbor(ushort id)
 		{
-			return neighbors[id] == true;
+			//return neighbors[id] == true;
+			return neighbors.Contains(id);
 		}
 
 		public IEnumerable<ushort> GetNeighbors()
 		{
-			for (ushort i = 0; i < ushort.MaxValue; i++)
+			return neighbors;
+			/*for (ushort i = 0; i < ushort.MaxValue; i++)
 			{
 				if (neighbors[i] == true)
 				{
 					yield return i;
 				}
-			}
+			}*/
 		}
 
 		public abstract void CopyValuesFrom(IRegionData region);

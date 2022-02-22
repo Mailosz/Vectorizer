@@ -27,7 +27,9 @@
             <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
             <Button x:Name="simplifyButton" Click="simplifyButton_Click" Margin="8,4">Uprość</Button>
             <Button x:Name="curveButton" Click="curveButton_Click" Margin="8,4">Krzywe</Button>
-            <Button x:Name="playgroundButton" Click="playgroundButton_Click" Margin="8,4">Piaskownica</Button>
+            <Button x:Name="vectorizeButton" Click="vectorizeButton_Click" Margin="8,4">Pełna wektoryzacja</Button>
+            <Button x:Name="comparisonButton" Click="comparisonButton_Click" Margin="8,4">Porównaj</Button>
+            <Button x:Name="saveButton" Click="saveButton_Click" Margin="8,4">Zapisz</Button>
         </StackPanel>
         
         <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1" Grid.ColumnSpan="100" PointerMoved="viewer_PointerMoved" PointerPressed="viewer_PointerPressed" PointerReleased="viewer_PointerReleased" PointerCanceled="viewer_PointerCanceled"/>

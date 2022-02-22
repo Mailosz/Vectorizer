@@ -246,5 +246,42 @@ namespace VectorizerApp
 			optionsPopup.IsOpen = !optionsPopup.IsOpen;
 		}
 
+		private void vectorizeButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (currentOperator is BitmapViewerOperator bvo)
+			{
+				var oper = new CurveViewerOperator(viewer, bvo.Context);
+
+				openNewViewerOperator(oper);
+			}
+		}
+
+		private async void saveButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (currentOperator is CurveViewerOperator cvo)
+			{
+				FileSavePicker fsp = new FileSavePicker();
+				fsp.FileTypeChoices.Add("SVG", new List<string>() { ".svg" });
+				var file = await fsp.PickSaveFileAsync();
+				if (file != null)
+				{
+					using (var stream = (await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite)).AsStream())
+					{ 
+						cvo.Context.Vectorizer.SaveSVG(stream);
+					}
+					
+				}
+			}
+		}
+
+		private void comparisonButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (currentOperator is CurveViewerOperator cvo)
+			{
+				var oper = new ComparingOperator(viewer, cvo.Context.OriginalBitmap, cvo.GetFinalBitmap());
+
+				openNewViewerOperator(oper);
+			}
+		}
 	}
 }

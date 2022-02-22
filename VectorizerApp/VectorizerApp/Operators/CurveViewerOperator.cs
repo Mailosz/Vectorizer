@@ -59,9 +59,30 @@ namespace VectorizerApp.Operators
 
 		public void Initialize()
 		{
-			SimpleCurveFitter scf = new SimpleCurveFitter();
-			scf.Properties = Context.Properties;
-			Context.FittingResult = scf.Fit(Context.TracingResult);
+			if (Context.Vectorizer == null)
+			{
+				var bytes = Context.OriginalBitmap.GetPixelBytes();
+				RgbaByteSource source = new RgbaByteSource(bytes, (int)Context.OriginalBitmap.SizeInPixels.Width);
+
+				Vectorizer<RgbaByteRegionData> vectorizer = new Vectorizer<RgbaByteRegionData>();
+				vectorizer.Source = source;
+				vectorizer.Properties = Context.Properties;
+				vectorizer.Regionize();
+				Context.Vectorizer = vectorizer;
+
+				Context.Vectorizer.Vectorize();
+
+				Context.RegionizationResult = Context.Vectorizer.RegionizationResult;
+				Context.TracingResult = Context.Vectorizer.TracingResult;
+				Context.FittingResult = Context.Vectorizer.FittingResult;
+
+			}
+			else
+			{
+				Context.Vectorizer.FitCurves();
+				Context.FittingResult = Context.Vectorizer.FittingResult;
+			}
+
 
 
 			geometries = new CanvasGeometry[Context.FittingResult.Regions.Count];
@@ -96,6 +117,23 @@ namespace VectorizerApp.Operators
 				i++;
 			}
 
+		}
+
+		public CanvasBitmap GetFinalBitmap()
+		{
+			CanvasRenderTarget crt = new CanvasRenderTarget(viewer.Device, Context.OriginalBitmap.SizeInPixels.Width, Context.OriginalBitmap.SizeInPixels.Height, 96);
+
+			using (var ds = crt.CreateDrawingSession())
+			{
+				int i = 0;
+				foreach (var g in geometries)
+				{
+					ds.FillGeometry(g, colorvalues[i]);
+					i++;
+				}
+			}
+
+			return crt;
 		}
 
 		public void Draw(DrawingArgs args)

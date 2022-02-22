@@ -261,6 +261,7 @@ namespace VectorizerApp
 			if (currentOperator is CurveViewerOperator cvo)
 			{
 				FileSavePicker fsp = new FileSavePicker();
+				fsp.SetOwnerWindow(this);
 				fsp.FileTypeChoices.Add("SVG", new List<string>() { ".svg" });
 				var file = await fsp.PickSaveFileAsync();
 				if (file != null)

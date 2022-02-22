@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graphics.Canvas;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,11 @@ namespace VectorizerApp.Operators
 		int chosenSize = 0;
 		byte[] heatmap;
 		CanvasBitmap heatmapBitmap;
+
+		float meandiff;
+		private MainWindow mainWindow;
+
+		TextBlock diffTB;
 
 		public ComparingOperator(Viewer viewer, CanvasBitmap bitmap1, CanvasBitmap bitmap2)
 		{
@@ -53,6 +59,7 @@ namespace VectorizerApp.Operators
 			int width = (int)bmp1.SizeInPixels.Width;
 
 			int start = 0;
+			int sum = 0;
 			do
 			{
 				for (int i = 0; i < width; i++)
@@ -80,10 +87,14 @@ namespace VectorizerApp.Operators
 					}
 
 					diffMap[pos] = mindiff;
+					sum += mindiff;
 				}
 				start += width;
 			}
 			while (start < colors1.Length);
+
+			meandiff = (float)sum / colors1.Length;
+			diffTB.Text = "Śr. Różnica: " + meandiff.ToString();
 
 			return diffMap;
 		}
@@ -92,13 +103,33 @@ namespace VectorizerApp.Operators
 		{
 			if (showHeatmap)
 			{
-				args.Session.DrawImage(heatmapBitmap);
+				args.Session.DrawImage(heatmapBitmap, 0f, 0f, new Windows.Foundation.Rect(0, 0, bitmap1.SizeInPixels.Width, bitmap1.SizeInPixels.Height), 1f, CanvasImageInterpolation.NearestNeighbor);
 			}
 		}
 
 		public void SetWindow(MainWindow mainWindow)
 		{
+			this.mainWindow = mainWindow;
 
+			StackPanel sp = new StackPanel();
+			mainWindow.SetRightPanel(sp);
+
+			ComboBox cb = new ComboBox();
+			cb.Items.Add(new ComboBoxItem() { Content = "1" });
+			cb.Items.Add(new ComboBoxItem() { Content = "2" });
+			cb.Items.Add(new ComboBoxItem() { Content = "3" });
+			cb.Items.Add(new ComboBoxItem() { Content = "4" });
+			cb.SelectedIndex = 0;
+			cb.SelectionChanged += (s, e) =>
+			{
+				chosenSize = cb.SelectedIndex;
+				Initialize();
+				viewer.Invalidate();
+			};
+			sp.Children.Add(cb);
+
+			diffTB = new TextBlock();
+			sp.Children.Add(diffTB);
 		}
 
 		public bool PointerPressed(PointerArgs args)

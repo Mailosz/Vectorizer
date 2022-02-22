@@ -95,16 +95,14 @@ namespace VectorizerLib
 			if (fitted != null)
 			{
 				XmlWriter writer = XmlWriter.Create(stream);
-				writer.WriteStartDocument();
 
-				writer.WriteStartElement("svg");
+				writer.WriteStartElement("svg", "http://www.w3.org/2000/svg");
 				writer.WriteAttributeString("viewBox", "0 0 " + source.Width.ToString() + " " + source.Height.ToString());
 				foreach (var region in fitted.Regions)
 				{
 					writer.WriteStartElement("path");
 					var mean = regions.Regions[region.Index].Mean;
-					string c = BitConverter.ToString((from m in mean select (byte)m).ToArray()).Remove('-');
-					writer.WriteAttributeString("fill", "#" + c);
+					writer.WriteAttributeString("fill", "rgba(" + (byte)mean[2] + "," + (byte)mean[1] + "," + (byte)mean[0] + "," + (byte)mean[3] + ")");
 
 					StringBuilder sb = new StringBuilder();
 					sb.Append("M");
@@ -139,9 +137,12 @@ namespace VectorizerLib
 								sb.Append(elem.Coords[2].Y.ToString(CultureInfo.InvariantCulture));
 								break;
 						}
-					}writer.WriteAttributeString("d", sb.ToString());
+					}
+					writer.WriteAttributeString("d", sb.ToString());
+					writer.WriteEndElement();
 				}
-				writer.WriteEndElementAsync();
+				writer.WriteEndElement();
+				writer.Flush();
 			}
 		}
 	}

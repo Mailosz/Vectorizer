@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,7 @@ namespace VectorizerApp.Operators
 		{
 			TransformBehavior = CanvasStrokeTransformBehavior.Hairline
 		};
+		private MainWindow mainWindow;
 
 		public TracingViewerOperator(Viewer viewer, Context context)
 		{
@@ -82,8 +84,11 @@ namespace VectorizerApp.Operators
 
 		public void SetWindow(MainWindow mainWindow)
 		{
+			this.mainWindow = mainWindow;
 
+			StackPanel sp = new StackPanel();
 		}
+
 		public bool PointerPressed(PointerArgs args)
 		{
 			return false;

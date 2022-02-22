@@ -4,6 +4,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -50,6 +51,8 @@ namespace VectorizerApp.Operators
 			}
 		}
 
+		TextBlock timeTB, countTB;
+
 		public CurveViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
@@ -70,7 +73,10 @@ namespace VectorizerApp.Operators
 				vectorizer.Regionize();
 				Context.Vectorizer = vectorizer;
 
+				Stopwatch timer = Stopwatch.StartNew();
 				Context.Vectorizer.Vectorize();
+				timer.Stop();
+				timeTB.Text = "Czas: " + timer.ElapsedMilliseconds + " ms";
 
 				Context.RegionizationResult = Context.Vectorizer.RegionizationResult;
 				Context.TracingResult = Context.Vectorizer.TracingResult;
@@ -79,7 +85,10 @@ namespace VectorizerApp.Operators
 			}
 			else
 			{
+				Stopwatch timer = Stopwatch.StartNew();
 				Context.Vectorizer.FitCurves();
+				timer.Stop();
+				timeTB.Text = "Czas: " + timer.ElapsedMilliseconds + " ms";
 				Context.FittingResult = Context.Vectorizer.FittingResult;
 			}
 
@@ -88,6 +97,7 @@ namespace VectorizerApp.Operators
 			geometries = new CanvasGeometry[Context.FittingResult.Regions.Count];
 			colorvalues = new Color[Context.FittingResult.Regions.Count];
 			int i = 0;
+			int count = 0;
 			foreach (var region in Context.FittingResult.Regions)
 			{
 				CanvasPathBuilder cpb = new CanvasPathBuilder(viewer.Device);
@@ -106,10 +116,13 @@ namespace VectorizerApp.Operators
 							cpb.AddCubicBezier(elem.Coords[0], elem.Coords[1], elem.Coords[2]);
 							break;
 					}
+					count++;
 				}
 				cpb.EndFigure(region.IsClosed ? CanvasFigureLoop.Closed : CanvasFigureLoop.Open);
 
 				geometries[i] = CanvasGeometry.CreatePath(cpb);
+
+				countTB.Text = "Liczba krzywych: " + count.ToString();
 
 				var mean = Context.RegionizationResult.Regions[region.Index].Mean;
 				var color = Color.FromArgb((byte)mean[3], (byte)mean[2], (byte)mean[1], (byte)mean[0]);
@@ -179,6 +192,12 @@ namespace VectorizerApp.Operators
 			ts2.Toggled += (s, e) => { ShowBackground = ts2.IsOn; };
 			ts2.IsOn = ShowBackground;
 			sp.Children.Add(ts2);
+
+			timeTB = new TextBlock();
+			sp.Children.Add(timeTB);
+			
+			countTB = new TextBlock();
+			sp.Children.Add(countTB);
 		}
 		public bool PointerPressed(PointerArgs args)
 		{

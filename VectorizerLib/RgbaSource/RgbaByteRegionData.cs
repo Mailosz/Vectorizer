@@ -75,6 +75,7 @@ namespace VectorizerLib
 			this.X2 = region.X2;
 			this.Y1 = region.Y1;
 			this.Y2 = region.Y2;
+			this.Start = region.Start;
 			this.Area = region.Area;
 		}
 	}

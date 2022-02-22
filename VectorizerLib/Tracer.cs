@@ -75,13 +75,85 @@ namespace VectorizerLib
 
 			initialize();
 
-			
-
-			while (arrows.TryDequeue(out Arrow arrow))
+			IEnumerator<KeyValuePair<ushort, IRegionData>> originalRegions = null;
+			do
 			{
-				if (!arrow.Used)
-					traceOneEdge(arrow);
+				while (arrows.TryDequeue(out Arrow arrow))
+				{
+					if (!arrow.Used)
+						traceOneEdge(arrow);
+				}
+
+				if (regions.Count < poster.Regions.Count)
+				{
+					if (originalRegions == null) 
+					{
+						originalRegions = poster.Regions.AsEnumerable().GetEnumerator();
+					}
+
+					while (originalRegions.MoveNext())
+					{
+						var (key, region) = originalRegions.Current;
+
+						if (!regions.TryGetValue(key, out _))
+						{
+							int pos = region.Start;
+							ushort left = 0;
+							ArrowParams arpar = ArrowParams.Right;
+
+							do
+							{
+								int up = pos - poster.Width;
+								if (up < 0)
+								{
+									arpar |= ArrowParams.HasOnlyRight;
+									break;
+								}
+								else if (poster.Board[up] != key)
+								{
+									arpar |= ArrowParams.HasBoth;
+									left = poster.Board[up];
+									break;
+								}
+								else
+								{
+									pos = up;
+								}
+							} while (true);
+
+							int y = Math.DivRem(pos, poster.Width, out int x);
+
+							TracedNode node = new TracedNode()
+							{
+								X = x,
+								Y = y,
+							};
+
+							arrows.Enqueue(new Arrow()
+							{
+								X = x,
+								Y = y,
+								Left = left,
+								Right = key,
+								Params = arpar,
+								Node = node,
+							});
+
+							break;
+						}
+					}
+
+					if (arrows.Count == 0)
+					{
+						break;
+					}
+				}
+				else
+				{
+					break;
+				}
 			}
+			while (true);
 
 			foreach (var node in allNodes)
 			{
@@ -159,8 +231,38 @@ namespace VectorizerLib
 
 			while (moveArrow(arrow))
 			{
-				//add point to pointlist
-				//pointsList.Add(new Vector2(arrow.X, arrow.Y));
+				//checking for loops
+				if (arrow.X == edge.Start.X && arrow.Y == edge.Start.Y)
+				{
+					allEdges.Add(edge);
+					edge.Start.Edges.Add(edge);
+					if (arrow.Node != edge.Start)
+					{
+						arrow.Node.Edges.Add(edge);
+					}
+
+					if (arrow.Params.HasFlag(ArrowParams.HasBoth))
+					{
+						TracedRegion lr = getOrCreateTracedRegion(arrow.Left);
+						lr.Edges.Add(edge);
+
+						TracedRegion rr = getOrCreateTracedRegion(arrow.Right);
+						rr.Edges.Add(edge);
+					}
+					else if (arrow.Params.HasFlag(ArrowParams.HasOnlyRight))
+					{
+						TracedRegion rr = getOrCreateTracedRegion(arrow.Right);
+						rr.Edges.Add(edge);
+					}
+					else
+					{
+						TracedRegion lr = getOrCreateTracedRegion(arrow.Left);
+						lr.Edges.Add(edge);
+					}
+
+					markDuplicateArrows(arrow);
+					break;
+				}
 			}
 
 			edge.Points = pointsList.ToArray();
@@ -217,14 +319,7 @@ namespace VectorizerLib
 						if (arrow.Params.HasFlag(ArrowParams.HasBoth)) tr.Edges.Add(edge);
 					}
 
-					foreach (var ar in arrows)
-					{
-						if (ar.X == arrow.X && ar.Y == arrow.Y && ar.Left == arrow.Right && ar.Right == arrow.Left && ar.Params.HasFlag(ArrowParams.HasBoth) == arrow.Params.HasFlag(ArrowParams.HasBoth))
-						{
-							ar.Used = true;
-							break;
-						}
-					}
+					markDuplicateArrows(arrow);
 					return false;
 				}
 
@@ -767,6 +862,18 @@ namespace VectorizerLib
 					}
 				}
 
+			}
+		}
+
+		private void markDuplicateArrows(Arrow arrow)
+		{
+			foreach (var ar in arrows)
+			{
+				if (ar.X == arrow.X && ar.Y == arrow.Y && ar.Left == arrow.Right && ar.Right == arrow.Left && ar.Params.HasFlag(ArrowParams.HasBoth) == arrow.Params.HasFlag(ArrowParams.HasBoth))
+				{
+					ar.Used = true;
+					break;
+				}
 			}
 		}
 

@@ -12,6 +12,7 @@ namespace VectorizerLib
 		int X2 { get; set; }
 		int Y1 { get; set; }
 		int Y2 { get; set; }
+		int Start { get; set; }
 		long Area { get; set; }
 		double SplitValue { get; set; }
 		bool IsFinal { get; set; }
@@ -31,11 +32,14 @@ namespace VectorizerLib
 	{
 		ushort id;
 		public ushort Id { get => id; set { id = value; } } 
-		protected int x1, y1, x2, y2;
+		protected int x1, y1, x2, y2, start;
 		public int X1 { get => x1; set { x1 = value; } }
 		public int X2 { get => x2; set { x2 = value; } }
 		public int Y1 { get => y1; set { y1 = value; } }
 		public int Y2 { get => y2; set { y2 = value; } }
+		public int Start { get => start; set { start = value; } }
+
+
 
 		internal long area;
 		public long Area { get => area; set { area = value; } }

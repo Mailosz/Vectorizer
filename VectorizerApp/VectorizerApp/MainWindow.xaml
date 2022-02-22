@@ -20,7 +20,9 @@
         <StackPanel Grid.Row="0" Grid.ColumnSpan="100" Orientation="Horizontal">
             <Button x:Name="loadButton" Click="loadButton_Click" Margin="8,4">Otwórz</Button>
             <Button x:Name="optionsButton" Click="optionsButton_Click" Margin="8,4">Opcje</Button>
-            <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">Cofnij</Button>
+            <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">
+                <FontIcon Glyph="&#xE72B;"/>
+            </Button>
             <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
             <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
             <Button x:Name="simplifyButton" Click="simplifyButton_Click" Margin="8,4">Uprość</Button>

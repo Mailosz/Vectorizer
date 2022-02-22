@@ -80,7 +80,8 @@ namespace VectorizerLib
 				{
 					if (fitNode)
 					{
-						curPoint = computeNodePathElement(prevPoint, curNode, pointsEnumerator.Current, prevEdge, curEdge);
+						var p = computeNodePathElement(prevPoint, curNode, pointsEnumerator.Current, prevEdge, curEdge);
+						curPoint = curNode.ToVector2();
 					}
 					else
 					{
@@ -92,13 +93,16 @@ namespace VectorizerLib
 
 					fitNode = false;
 				}
-				var nextPoint = curend.ToVector2();
+				Vector2 nextPoint;
 				if (fitNode)
 				{
-					curPoint = computeNodePathElement(prevPoint, curNode, nextPoint, prevEdge, curEdge);
+					nextPoint = curend.ToVector2();
+					var p = computeNodePathElement(prevPoint, curNode, nextPoint, prevEdge, curEdge);
+					curPoint = curNode.ToVector2();
 				}
 				else
 				{
+					nextPoint = curend.ToVector2();// computeNextNodeRealPosition(curend, curEdge);
 					computePathElement(prevPoint, curPoint, nextPoint);
 				}
 
@@ -115,6 +119,64 @@ namespace VectorizerLib
 
 
 			return result;
+
+			Vector2 computeNextNodeRealPosition(TracedNode node, TracedEdge edge)
+			{
+				if (node.IsBorder)
+				{
+					return node.ToVector2();
+				}
+				else
+				{
+					float diff = findSmoothest(node, out int smooth1, out int smooth2);
+
+					if (computeAcuteness(diff)) // acute
+					{
+						return node.ToVector2();
+					}
+					else // smooth
+					{
+						var edge1 = node.Edges[smooth1];
+						var edge2 = node.Edges[smooth2];
+						if (edge1 == edge || edge2 == edge)
+						{
+							//this is the smoothest route
+							return node.ToVector2();
+						}
+						else
+						{
+							var (point1, point3) = getOutgoingPoints(edge1, node, edge2);
+							var point2 = node.ToVector2();
+
+							float dis1 = Vector2.Distance(point1, point2);
+							float dis2 = Vector2.Distance(point1, point2) + Vector2.Distance(point2, point3);
+							float t;
+							if (dis1 < float.Epsilon)
+							{
+								t = 0.5f;
+							}
+							else
+							{
+								t = dis1 / dis2;
+							}
+
+							var start = point1 + (point2 - point1) * t;
+							var (cp1, cp2, lastPoint) = getCurveControlPoints(point1, point2, point3);
+
+							var hp1 = start + (cp1 - start) * t;
+							var hp2 = cp1 + (cp2 - cp1) * t;
+							var hp3 = cp2 + (lastPoint - cp2) * t;
+
+							var hp4 = hp1 + (hp2 - hp1) * t;
+							var hp5 = hp2 + (hp3 - hp2) * t;
+
+							var halfpoint = hp4 + (hp5 - hp4) * t;
+
+							return halfpoint;
+						}
+					}
+				}
+			}
 
 			Vector2 computeNodePathElement(Vector2 prevPoint, TracedNode node, Vector2 nextPoint, TracedEdge prevEdge, TracedEdge nextEdge)
 			{
@@ -141,17 +203,30 @@ namespace VectorizerLib
 						if ((edge1 == prevEdge && edge2 == nextEdge)
 							|| (edge2 == prevEdge && edge1 == nextEdge))
 						{
+							var nodePoint = node.ToVector2();
 							//this is the smoothest route
-							return computePathElement(prevPoint, node.ToVector2(), nextPoint);
+							computePathElement(prevPoint, nodePoint, nextPoint);
+
+							return nodePoint + (nextPoint - nodePoint) / 2;
 						}
 						else
 						{
 							var (point1, point3) = getOutgoingPoints(edge1, node, edge2);
 							var point2 = node.ToVector2();
 
-							var t = 0.5f;
+							float dis1 = Vector2.Distance(point1, point2);
+							float dis2 = Vector2.Distance(point1, point2) + Vector2.Distance(point2, point3);
+							float t;
+							if (dis1 < float.Epsilon)
+							{
+								t = 0.5f;
+							}
+							else
+							{
+								t = dis1 / dis2;
+							}
 
-							var start = point1 + (point2 - point1) * t;
+							var start = point1 + (point2 - point1) * 0.5f;
 							var (cp1, cp2, lastPoint) = getCurveControlPoints(point1, point2, point3);
 
 							var hp1 = start + (cp1 - start) * t;
@@ -172,7 +247,7 @@ namespace VectorizerLib
 								addPathElement(PathElementType.Cubic, hp4, hp1, start);
 
 								lastAcute = false;
-								return halfpoint;
+								return start;
 							} 
 							else if (nextEdge == edge2)
 							{
@@ -181,7 +256,7 @@ namespace VectorizerLib
 
 								lastAcute = false;
 
-								return halfpoint;
+								return lastPoint;
 							}
 							else if (prevEdge == edge1)
 							{
@@ -197,19 +272,18 @@ namespace VectorizerLib
 							}
 							else
 							{
-
+								//addPathElement(PathElementType.Cubic, prevPoint, hp5, halfpoint);
+								addPathElement(PathElementType.Line, halfpoint);
 								lastAcute = true;
 
 								return halfpoint;
 							}
-
-							return halfpoint;
 						}
 					}
 				}
 			}
 
-			Vector2 computePathElement(Vector2 point1, Vector2 point2, Vector2 point3)
+			void computePathElement(Vector2 point1, Vector2 point2, Vector2 point3)
 			{
 				var dir1 = Helper.Direction(point1, point2);
 				var dir2 = Helper.Direction(point2, point3);
@@ -223,7 +297,6 @@ namespace VectorizerLib
 				{
 					addPathElement(PathElementType.Line, point2);
 					lastAcute = acute;
-					return point2;
 				}
 				else
 				{
@@ -235,7 +308,6 @@ namespace VectorizerLib
 					addPathElement(PathElementType.Cubic, cp1, cp2, lastPoint);
 
 					lastAcute = acute;
-					return lastPoint;
 				}
 
 			}
@@ -268,18 +340,28 @@ namespace VectorizerLib
 
 			bool findNextEdge()
 			{
-				prevEdge = curEdge;
-				fitNode = true;
-				curNode = curend;
 				if (curend == first.Start)
 				{
-					curEdge = first;
-					var nextPoint = first.Points.Length == 0 ? first.End.ToVector2() : first.Points[0];
-					result.Start = computeNodePathElement(prevPoint, curend, nextPoint, prevEdge, curEdge);
+					//curEdge = first;
+					var nextPoint = first.SimplifiedPoints.Length == 0 ? first.End.ToVector2() : first.SimplifiedPoints[0];
+					result.Start = computeNodePathElement(curPoint, curend, nextPoint, curEdge, first);
+
+					if (lastAcute)
+					{
+						result.Path.Insert(0, new PathElement()
+						{
+							ElementType = PathElementType.Line,
+							Coords = new[] { result.Start + (nextPoint - result.Start) / 2 }
+						});
+
+					}
 
 					result.IsClosed = true;
 					return false;
 				}
+				fitNode = true;
+				curNode = curend;
+				prevEdge = curEdge;
 				
 				foreach (var edge in edges)
 				{

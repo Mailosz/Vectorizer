@@ -452,9 +452,10 @@ namespace VectorizerLib
 				{
 					Region = createRegion(),
 				};
+				frd.Region.Start = searchpos;
 				nRegions.Add(frd);
 				paintPixel(searchpos, frd);
-				checkForNeighborsHorizontally(searchpos);
+				if (searchpos != start) checkForNeighborsHorizontally(searchpos);
 				checkForNeighborsVertically(searchpos);
 
 				//selecting first line

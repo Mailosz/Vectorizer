@@ -250,6 +250,7 @@ namespace VectorizerApp
 		{
 			if (currentOperator is BitmapViewerOperator bvo)
 			{
+				bvo.Context.StepByStep = false;
 				var oper = new CurveViewerOperator(viewer, bvo.Context);
 
 				openNewViewerOperator(oper);

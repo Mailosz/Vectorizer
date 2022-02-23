@@ -41,6 +41,7 @@ namespace VectorizerApp.Operators
 			vectorizer.Regionize();
 			Context.Vectorizer = vectorizer;
 			Context.RegionizationResult = vectorizer.RegionizationResult;
+			Context.StepByStep = true;
 			this.board = vectorizer.RegionizationResult.Board;
 
 			this.width = source.Width;

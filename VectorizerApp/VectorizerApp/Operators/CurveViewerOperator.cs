@@ -62,7 +62,7 @@ namespace VectorizerApp.Operators
 
 		public void Initialize()
 		{
-			if (Context.Vectorizer == null)
+			if (!Context.StepByStep)
 			{
 				var bytes = Context.OriginalBitmap.GetPixelBytes();
 				RgbaByteSource source = new RgbaByteSource(bytes, (int)Context.OriginalBitmap.SizeInPixels.Width);

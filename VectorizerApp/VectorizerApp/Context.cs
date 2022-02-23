@@ -14,6 +14,7 @@ namespace VectorizerApp
 		public CanvasBitmap FinalBitmap { get; set; }
 		public VectorizerProperties Properties { get; set; }
 		public RegionizationResult RegionizationResult { get; set; }
+		public bool StepByStep { get; internal set; }
 		public FittingResult FittingResult { get; internal set; }
 		public CanvasBitmap RegionsImage { get; internal set; }
 		public TracingResult TracingResult { get; set; }

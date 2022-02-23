@@ -57,7 +57,7 @@ namespace VectorizerLib
 		{
 			Tracer posterizer = new Tracer()
 			{
-				PosterizationResult = RegionizationResult,
+				RegionizationResult = RegionizationResult,
 				Properties = Properties
 			};
 
@@ -78,8 +78,10 @@ namespace VectorizerLib
 		public void FitCurves()
 		{
 			SimpleCurveFitter scf = new SimpleCurveFitter();
+			scf.TracingResult = traced;
 			scf.Properties = Properties;
-			fitted = scf.Fit(traced);
+			scf.TracingResult = traced;
+			fitted = scf.Fit();
 
 			//CurveFitter fitter = new CurveFitter()
 			//{

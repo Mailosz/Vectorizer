@@ -60,7 +60,7 @@ namespace VectorizerLib
 		public VectorizerProperties Properties { get => properties; set { properties = value; } }
 
 		RegionizationResult poster;
-		public RegionizationResult PosterizationResult { get => poster; set { poster = value; } }
+		public RegionizationResult RegionizationResult { get => poster; set { poster = value; } }
 
 		Queue<Arrow> arrows;
 		List<Vector2> pointsList;
@@ -169,6 +169,14 @@ namespace VectorizerLib
 				Nodes = allNodes,
 				Edges = allEdges,
 			};
+		}
+
+		public void SimplifyRegion(TracedRegion tr)
+		{
+			foreach (var edge in tr.Edges)
+			{
+				edge.SimplifiedPoints = DouglasPeucker.Simplify(edge.Start.ToVector2(), edge.Points, edge.End.ToVector2(), properties.FittingDistance).ToArray();
+			}
 		}
 
 		private TracedRegion getOrCreateTracedRegion(ushort id)

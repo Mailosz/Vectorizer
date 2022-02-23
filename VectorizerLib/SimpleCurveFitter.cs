@@ -12,12 +12,12 @@ namespace VectorizerLib
 		VectorizerProperties properties;
 		public VectorizerProperties Properties { get => properties; set { properties = value; } }
 
+		public TracingResult TracingResult { get; set; }
 
-
-		public FittingResult Fit(TracingResult tracingResult)
+		public FittingResult Fit()
 		{
-			List<FitRegion> regions = new List<FitRegion>(tracingResult.Regions.Count);
-			foreach (var (key, region) in tracingResult.Regions)
+			List<FitRegion> regions = new List<FitRegion>(TracingResult.Regions.Count);
+			foreach (var (key, region) in TracingResult.Regions)
 			{
 				if (region.Edges.Count > 0)
 				{

@@ -64,7 +64,7 @@ namespace VectorizerLib
 				testValue += mean[i] * eigenVector[i];
 			}
 
-			SplitValue = eigenValue * Math.Log(area, 1.2);
+			SplitValue = eigenValue + Math.Log(area, 1.01);
 		}
 
 		public override void CopyValuesFrom(IRegionData region)

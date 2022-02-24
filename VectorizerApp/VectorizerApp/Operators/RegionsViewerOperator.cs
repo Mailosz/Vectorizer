@@ -25,6 +25,7 @@ namespace VectorizerApp.Operators
 		private TextBlock ridTB;
 		private TextBlock coordTB;
 		private TextBlock rsplitvalueTB;
+		private TextBlock maxdiffTB;
 
 		public RegionsViewerOperator(Viewer viewer, Context context)
 		{
@@ -70,6 +71,8 @@ namespace VectorizerApp.Operators
 
 			Context.RegionsImage = bitmap;
 
+			maxdiffTB.Text = "Maximum splitvalue: " + Context.RegionizationResult.PeakCov;
+
 			viewer.SetSize(bitmap.Size);
 		}
 
@@ -93,6 +96,9 @@ namespace VectorizerApp.Operators
 
 			rsplitvalueTB = new TextBlock();
 			sp.Children.Add(rsplitvalueTB);
+
+			maxdiffTB = new TextBlock();
+			sp.Children.Add(maxdiffTB);
 		}
 		public bool PointerPressed(PointerArgs args)
 		{

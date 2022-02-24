@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -263,13 +264,22 @@ namespace VectorizerApp
 			{
 				FileSavePicker fsp = new FileSavePicker();
 				fsp.SetOwnerWindow(this);
+				fsp.FileTypeChoices.Add("SVGZ", new List<string>() { ".svgz" });
 				fsp.FileTypeChoices.Add("SVG", new List<string>() { ".svg" });
 				var file = await fsp.PickSaveFileAsync();
 				if (file != null)
 				{
 					using (var stream = (await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite)).AsStream())
 					{ 
-						cvo.Context.Vectorizer.SaveSVG(stream);
+						if (file.FileType == ".svgz")
+						{
+							var str = new DeflateStream(stream, CompressionLevel.Optimal);
+							cvo.Context.Vectorizer.SaveSVG(str);
+						}
+						else
+						{
+							cvo.Context.Vectorizer.SaveSVG(stream);
+						}
 					}
 					
 				}

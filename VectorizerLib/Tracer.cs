@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -67,6 +68,7 @@ namespace VectorizerLib
 		Dictionary<ushort, TracedRegion> regions;
 		List<TracedEdge> allEdges;
 		List<TracedNode> allNodes;
+		BitArray isTraced;
 
 		internal TracingResult Trace()
 		{
@@ -75,7 +77,8 @@ namespace VectorizerLib
 
 			initialize();
 
-			IEnumerator<KeyValuePair<ushort, IRegionData>> originalRegions = null;
+
+			int pos = 0;
 			do
 			{
 				while (arrows.TryDequeue(out Arrow arrow))
@@ -86,42 +89,12 @@ namespace VectorizerLib
 
 				if (regions.Count < poster.Regions.Count)
 				{
-					if (originalRegions == null) 
+					while (pos < RegionizationResult.Board.Length)
 					{
-						originalRegions = poster.Regions.AsEnumerable().GetEnumerator();
-					}
-
-					while (originalRegions.MoveNext())
-					{
-						var (key, region) = originalRegions.Current;
-
-						if (!regions.TryGetValue(key, out _))
+						if (!isTraced[RegionizationResult.Board[pos]])
 						{
-							int pos = region.Start;
-							ushort left = 0;
-							ArrowParams arpar = ArrowParams.Right;
-
-							do
-							{
-								int up = pos - poster.Width;
-								if (up < 0)
-								{
-									arpar |= ArrowParams.HasOnlyRight;
-									break;
-								}
-								else if (poster.Board[up] != key)
-								{
-									arpar |= ArrowParams.HasBoth;
-									left = poster.Board[up];
-									break;
-								}
-								else
-								{
-									pos = up;
-								}
-							} while (true);
-
 							int y = Math.DivRem(pos, poster.Width, out int x);
+
 
 							TracedNode node = new TracedNode()
 							{
@@ -129,18 +102,60 @@ namespace VectorizerLib
 								Y = y,
 							};
 
-							arrows.Enqueue(new Arrow()
+							if (y == 0)
 							{
-								X = x,
-								Y = y,
-								Left = left,
-								Right = key,
-								Params = arpar,
-								Node = node,
-							});
+								arrows.Enqueue(new Arrow()
+								{
+									X = x,
+									Y = y,
+									Left = 0,
+									Right = RegionizationResult.Board[pos],
+									Params = ArrowParams.Right | ArrowParams.HasOnlyRight,
+									Node = node,
+								});
+							}
+							else
+							{
+								arrows.Enqueue(new Arrow()
+								{
+									X = x,
+									Y = y,
+									Left = RegionizationResult.Board[pos - RegionizationResult.Width],
+									Right = RegionizationResult.Board[pos],
+									Params = ArrowParams.Right | ArrowParams.HasBoth,
+									Node = node,
+								});
+							}
 
+							if (x == 0)
+							{
+								arrows.Enqueue(new Arrow()
+								{
+									X = x,
+									Y = y,
+									Left = RegionizationResult.Board[pos],
+									Right = 0,
+									Params = ArrowParams.Down,
+									Node = node,
+								});
+							}
+							else
+							{
+								arrows.Enqueue(new Arrow()
+								{
+									X = x,
+									Y = y,
+									Left = RegionizationResult.Board[pos],
+									Right = RegionizationResult.Board[pos - 1],
+									Params = ArrowParams.Down | ArrowParams.HasBoth,
+									Node = node,
+								});
+							}
+
+							pos++;
 							break;
 						}
+						else pos++;
 					}
 
 					if (arrows.Count == 0)
@@ -188,6 +203,7 @@ namespace VectorizerLib
 
 			TracedRegion ntr = new TracedRegion();
 			regions.Add(id, ntr);
+			isTraced[id] = true;
 			return ntr;
 		}
 
@@ -200,10 +216,12 @@ namespace VectorizerLib
 			allEdges = new List<TracedEdge>(1024);
 
 			ushort cornerregion = poster.Board[0];
+			isTraced = new BitArray(ushort.MaxValue);
 
 			//first region and node
 			TracedRegion ntr = new TracedRegion();
 			regions.Add(cornerregion, ntr);
+			isTraced[cornerregion] = true;
 			TracedNode cornernode = new TracedNode();
 			cornernode.IsBorder = true;
 			allNodes.Add(cornernode);

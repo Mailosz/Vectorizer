@@ -32,11 +32,15 @@ namespace VectorizerLib
 			initialize();
 			firstPass();
 			bool keepOn = true;
+			int cleanCount = 10;
+			int cleanStart = 10;
 			do 
 			{ 
 				keepOn = singlePass();
-				if (passesCount % 10 == 0)
+				if (--cleanCount == 0)
 				{
+					cleanStart *= 2;
+					cleanCount = cleanStart;
 					joinPass();
 				}
 			} 

@@ -13,7 +13,10 @@ namespace VectorizerLib
 		int Y1 { get; set; }
 		int Y2 { get; set; }
 		int Start { get; set; }
+		int Times { get; set; }
 		long Area { get; set; }
+
+		Color Color { get; set; }
 		double SplitValue { get; set; }
 		bool IsFinal { get; set; }
 
@@ -38,7 +41,7 @@ namespace VectorizerLib
 		public int Y1 { get => y1; set { y1 = value; } }
 		public int Y2 { get => y2; set { y2 = value; } }
 		public int Start { get => start; set { start = value; } }
-
+		public int Times { get; set; }
 
 
 		internal long area;

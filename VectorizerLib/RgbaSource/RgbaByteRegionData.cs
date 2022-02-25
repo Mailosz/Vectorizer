@@ -12,7 +12,7 @@ namespace VectorizerLib
 	public class RgbaByteRegionData : RegionDataBase, IRegionData
 	{
 		public double[] mean = new double[4];
-		public long[] cov2 = new long[4];
+		public double variance;
 		public double[,] cov = new double[4, 4];
 
 		public long[,] computedCov = new long[4, 4];
@@ -27,7 +27,8 @@ namespace VectorizerLib
 				Mean[i] = (float)(mean[i]);
 			}
 
-			Color = System.Drawing.Color.FromArgb((int)Mean[3], (int)Mean[0], (int)Mean[1], (int)Mean[2]);
+			Color = System.Drawing.Color.FromArgb((byte)mean[3], (byte)mean[2], (byte)mean[1], (byte)mean[0]); 
+			//System.Drawing.Color.FromArgb((int)Mean[3], (int)Mean[0], (int)Mean[1], (int)Mean[2]);
 
 			/*for (int a = 0; a < 4; a++)
 			{
@@ -64,7 +65,12 @@ namespace VectorizerLib
 				testValue += mean[i] * eigenVector[i];
 			}
 
-			SplitValue = eigenValue + Math.Log(area, 1.01);
+			/*if (Id == 8207)
+			{
+				Console.WriteLine();
+			}*/
+
+			SplitValue = variance / area / 4 * Math.Log(area, 2);
 		}
 
 		public override void CopyValuesFrom(IRegionData region)

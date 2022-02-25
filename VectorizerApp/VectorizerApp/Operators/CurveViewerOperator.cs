@@ -52,16 +52,14 @@ namespace VectorizerApp.Operators
 		}
 
 		TextBlock timeTB, countTB;
+		long time;
 
 		public CurveViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
 
 			Context = context;
-		}
 
-		public void Initialize()
-		{
 			if (!Context.StepByStep)
 			{
 				var bytes = Context.OriginalBitmap.GetPixelBytes();
@@ -70,13 +68,13 @@ namespace VectorizerApp.Operators
 				Vectorizer<RgbaByteRegionData> vectorizer = new Vectorizer<RgbaByteRegionData>();
 				vectorizer.Source = source;
 				vectorizer.Properties = Context.Properties;
-				vectorizer.Regionize();
 				Context.Vectorizer = vectorizer;
 
 				Stopwatch timer = Stopwatch.StartNew();
 				Context.Vectorizer.Vectorize();
 				timer.Stop();
-				timeTB.Text = "Czas: " + timer.ElapsedMilliseconds + " ms";
+				time = timer.ElapsedMilliseconds;
+				
 
 				Context.RegionizationResult = Context.Vectorizer.RegionizationResult;
 				Context.TracingResult = Context.Vectorizer.TracingResult;
@@ -88,11 +86,14 @@ namespace VectorizerApp.Operators
 				Stopwatch timer = Stopwatch.StartNew();
 				Context.Vectorizer.FitCurves();
 				timer.Stop();
-				timeTB.Text = "Czas: " + timer.ElapsedMilliseconds + " ms";
+				time = timer.ElapsedMilliseconds;
 				Context.FittingResult = Context.Vectorizer.FittingResult;
 			}
+		}
 
-
+		public void Initialize()
+		{
+			timeTB.Text = "Czas: " + time + " ms";
 
 			geometries = new CanvasGeometry[Context.FittingResult.Regions.Count];
 			colorvalues = new Color[Context.FittingResult.Regions.Count];

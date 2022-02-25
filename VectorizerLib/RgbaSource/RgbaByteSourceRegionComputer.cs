@@ -42,7 +42,8 @@ namespace VectorizerLib
 			for (int i = 0; i < 4; i++) 
 			{ 
 				diff[i] = source.bitmap[iterator + i] - region.mean[i];
-				region.mean[i] += diff[i] / region.Area; 
+				region.mean[i] += diff[i] / region.Area;
+				region.variance += Math.Sqrt(diff[i] * (source.bitmap[iterator + i] - region.mean[i]));
 			}
 
 			//v1

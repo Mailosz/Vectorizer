@@ -27,6 +27,22 @@ namespace VectorizerApp.Operators
 		private TextBlock rsplitvalueTB;
 		private TextBlock maxdiffTB;
 
+		bool matchingColors = true;
+		private TextBlock rCountTB;
+		private TextBlock areaTB;
+		private TextBlock passesTB;
+
+		public bool MatchingColors
+		{
+			get => matchingColors; 
+			set
+			{
+				matchingColors = value;
+				createBitmap();
+				viewer.Invalidate();
+			}
+		}
+
 		public RegionsViewerOperator(Viewer viewer, Context context)
 		{
 			this.viewer = viewer;
@@ -52,28 +68,50 @@ namespace VectorizerApp.Operators
 
 		public void Initialize()
 		{
-			List<Color> colorvalues = new List<Color>()
-			{
-				Colors.AliceBlue, Colors.AntiqueWhite, Colors.Aqua, Colors.Aquamarine, Colors.Azure, Colors.Beige, Colors.Bisque, Colors.Black, Colors.BlanchedAlmond, Colors.Blue,
-				Colors.BlueViolet, Colors.Brown, Colors.BurlyWood, Colors.CadetBlue, Colors.Chartreuse, Colors.Chocolate, Colors.Coral, Colors.CornflowerBlue, Colors.Cornsilk,
-				Colors.Crimson, Colors.Cyan, Colors.DarkBlue, Colors.DarkCyan, Colors.DarkGoldenrod, Colors.DarkGray, Colors.DarkGreen, Colors.DarkKhaki, Colors.DarkMagenta,
-				Colors.DarkOliveGreen, Colors.DarkOrange, Colors.DarkOrchid, Colors.DarkRed, Colors.DarkSalmon, Colors.DarkSeaGreen, Colors.DarkSlateBlue, Colors.DarkSlateGray,
-				Colors.DarkTurquoise, Colors.DarkViolet, Colors.DeepPink, Colors.DeepSkyBlue, Colors.DimGray, Colors.DodgerBlue, Colors.Firebrick, Colors.FloralWhite, Colors.ForestGreen
-			};
-
-			Color[] colors = new Color[board.Length];
-			for (int i = 0; i < board.Length; i++)
-			{
-				colors[i] = colorvalues[board[i] % colorvalues.Count];
-			}
-
-			bitmap = CanvasBitmap.CreateFromColors(viewer.Device, colors, width, height);
-
-			Context.RegionsImage = bitmap;
+			viewer.SetSize(Context.OriginalBitmap.Size);
+			createBitmap();
 
 			maxdiffTB.Text = "Maximum splitvalue: " + Context.RegionizationResult.PeakCov;
+			rCountTB.Text = "Liczba regionów: " + Context.RegionizationResult.RegionCount;
+			passesTB.Text = "Liczba kroków: " + Context.RegionizationResult.Steps;
+		}
 
-			viewer.SetSize(bitmap.Size);
+		private void createBitmap()
+		{
+			if (matchingColors)
+			{
+				Color[] colors = new Color[board.Length];
+				for (int i = 0; i < board.Length; i++)
+				{
+					var c = Context.RegionizationResult.Regions[board[i]].Color;
+					colors[i] = Color.FromArgb(c.A, c.R, c.G, c.B);
+				}
+
+				bitmap = CanvasBitmap.CreateFromColors(viewer.Device, colors, width, height);
+
+				Context.RegionsImage = bitmap;
+			}
+			else
+			{
+				List<Color> colorvalues = new List<Color>()
+				{
+					Colors.AliceBlue, Colors.AntiqueWhite, Colors.Aqua, Colors.Aquamarine, Colors.Azure, Colors.Beige, Colors.Bisque, Colors.Black, Colors.BlanchedAlmond, Colors.Blue,
+					Colors.BlueViolet, Colors.Brown, Colors.BurlyWood, Colors.CadetBlue, Colors.Chartreuse, Colors.Chocolate, Colors.Coral, Colors.CornflowerBlue, Colors.Cornsilk,
+					Colors.Crimson, Colors.Cyan, Colors.DarkBlue, Colors.DarkCyan, Colors.DarkGoldenrod, Colors.DarkGray, Colors.DarkGreen, Colors.DarkKhaki, Colors.DarkMagenta,
+					Colors.DarkOliveGreen, Colors.DarkOrange, Colors.DarkOrchid, Colors.DarkRed, Colors.DarkSalmon, Colors.DarkSeaGreen, Colors.DarkSlateBlue, Colors.DarkSlateGray,
+					Colors.DarkTurquoise, Colors.DarkViolet, Colors.DeepPink, Colors.DeepSkyBlue, Colors.DimGray, Colors.DodgerBlue, Colors.Firebrick, Colors.FloralWhite, Colors.ForestGreen
+				};
+
+				Color[] colors = new Color[board.Length];
+				for (int i = 0; i < board.Length; i++)
+				{
+					colors[i] = colorvalues[board[i] % colorvalues.Count];
+				}
+
+				bitmap = CanvasBitmap.CreateFromColors(viewer.Device, colors, width, height);
+
+				Context.RegionsImage = bitmap;
+			}
 		}
 
 		public void Draw(DrawingArgs args)
@@ -88,17 +126,32 @@ namespace VectorizerApp.Operators
 			StackPanel sp = new StackPanel();
 			mainWindow.SetRightPanel(sp);
 
+			ToggleSwitch ts1 = new ToggleSwitch();
+			ts1.Header = "Kolory obrazka";
+			ts1.Toggled += (s, e) => { MatchingColors = ts1.IsOn; };
+			ts1.IsOn = matchingColors;
+			sp.Children.Add(ts1);
+
 			coordTB = new TextBlock();
 			sp.Children.Add(coordTB);
 
 			ridTB = new TextBlock();
 			sp.Children.Add(ridTB);
 
+			areaTB = new TextBlock();
+			sp.Children.Add(areaTB);
+
 			rsplitvalueTB = new TextBlock();
 			sp.Children.Add(rsplitvalueTB);
 
+			rCountTB = new TextBlock();
+			sp.Children.Add(rCountTB);
+
 			maxdiffTB = new TextBlock();
 			sp.Children.Add(maxdiffTB);
+
+			passesTB = new TextBlock();
+			sp.Children.Add(passesTB);
 		}
 		public bool PointerPressed(PointerArgs args)
 		{
@@ -119,14 +172,17 @@ namespace VectorizerApp.Operators
 
 				coordTB.Text = $"({x}, {y})";
 				ridTB.Text = "Region: " + id.ToString();
+				
 
 				if (Context.RegionizationResult.Regions.TryGetValue(id, out IRegionData region))
 				{
 					rsplitvalueTB.Text = "SplitValue: " + region.SplitValue.ToString();
+					areaTB.Text = "Powierzchnia: " + region.Area;
 				}
 				else
 				{
 					rsplitvalueTB.Text = "!!! No such region !!!";
+					areaTB.Text = "";
 				}
 			}
 			else

@@ -83,7 +83,7 @@ namespace VectorizerLib
 		private void firstPass()
 		{
 			//initial region
-			var region = createRegion();
+			var region = createRegion(0);
 			//full image
 			region.X1 = 0; region.Y1 = 0; region.X2 = source.Width - 1; region.Y2 = source.Height - 1;
 
@@ -289,8 +289,8 @@ namespace VectorizerLib
 		/// <param name="iterator"></param>
 		private void divideRegion(RegionData region, ISourceRegionIterator<RegionData> iterator)
 		{
-			var rAbove = createRegion();
-			var rBelow = createRegion();
+			var rAbove = createRegion(region.Times);
+			var rBelow = createRegion(region.Times);
 
 			bool anybelow = false, anyabove = false;
 
@@ -371,7 +371,7 @@ namespace VectorizerLib
 
 
 		int regionsCount = 0;
-		private RegionData createRegion()
+		private RegionData createRegion(int times)
 		{
 			if (regionsList.Count == ushort.MaxValue-1) throw new IndexOutOfRangeException("Too many regions");
 
@@ -386,6 +386,7 @@ namespace VectorizerLib
 
 			RegionData region = source.CreateRegionData();
 			region.Id = lastId;
+			region.Times = times + 1;
 			if (lastId == 15548)
 			{
 				Console.WriteLine("FOUND");
@@ -454,7 +455,7 @@ namespace VectorizerLib
 				//creating new region
 				FloodRegionData frd = new FloodRegionData()
 				{
-					Region = createRegion(),
+					Region = createRegion(oldregion.Times),
 				};
 				frd.Region.Start = searchpos;
 				nRegions.Add(frd);

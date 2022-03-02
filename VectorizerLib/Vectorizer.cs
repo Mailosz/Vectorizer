@@ -82,13 +82,6 @@ namespace VectorizerLib
 			scf.Properties = Properties;
 			scf.TracingResult = traced;
 			fitted = scf.Fit();
-
-			//CurveFitter fitter = new CurveFitter()
-			//{
-			//	TracingResult = TracingResult,
-			//	Properties = Properties
-			//};
-			//fitted = fitter.FitCurves();
 		}
 
 

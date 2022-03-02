@@ -295,5 +295,46 @@ namespace VectorizerApp
 				openNewViewerOperator(oper);
 			}
 		}
+
+		private async void comparison2Button_Click(object sender, RoutedEventArgs e)
+		{
+			FileOpenPicker fop = new FileOpenPicker();
+			fop.SetOwnerWindow(this);
+			fop.CommitButtonText = "Wybierz 1 plik";
+
+			fop.FileTypeFilter.Add(".jpg");
+			fop.FileTypeFilter.Add(".jpeg");
+			fop.FileTypeFilter.Add(".png");
+			fop.FileTypeFilter.Add(".bmp");
+			fop.FileTypeFilter.Add(".gif");
+			fop.FileTypeFilter.Add(".tiff");
+			fop.FileTypeFilter.Add(".tif");
+
+			var file1 = await fop.PickSingleFileAsync();
+
+			if (file1 != null)
+			{
+				var bitmap1 = await CanvasBitmap.LoadAsync(viewer.Device, await file1.OpenAsync(Windows.Storage.FileAccessMode.Read));
+
+				fop.CommitButtonText = "Wybierz 2 plik";
+
+				var file2 = await fop.PickSingleFileAsync();
+				var bitmap2 = await CanvasBitmap.LoadAsync(viewer.Device, await file2.OpenAsync(Windows.Storage.FileAccessMode.Read));
+
+				if (file2 != null)
+				{
+					if (bitmap2.SizeInPixels.Width == bitmap1.SizeInPixels.Width && bitmap2.SizeInPixels.Height == bitmap1.SizeInPixels.Height)
+					{
+						var oper = new ComparingOperator(viewer, bitmap1, bitmap2);
+
+						openNewViewerOperator(oper);
+					}
+				}
+
+				
+
+				
+			}
+		}
 	}
 }

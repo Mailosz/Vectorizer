@@ -29,6 +29,7 @@
             <Button x:Name="curveButton" Click="curveButton_Click" Margin="8,4">Krzywe</Button>
             <Button x:Name="vectorizeButton" Click="vectorizeButton_Click" Margin="8,4">Pełna wektoryzacja</Button>
             <Button x:Name="comparisonButton" Click="comparisonButton_Click" Margin="8,4">Porównaj</Button>
+            <Button x:Name="comparison2Button" Click="comparison2Button_Click" Margin="8,4">Porównaj pliki</Button>
             <Button x:Name="saveButton" Click="saveButton_Click" Margin="8,4">Zapisz</Button>
         </StackPanel>
         

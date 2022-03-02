@@ -70,7 +70,7 @@ namespace VectorizerLib
 				Console.WriteLine();
 			}*/
 
-			SplitValue = variance / area / 4 * Math.Log(area, 2);
+			SplitValue = variance / area / 4 * Math.Log2(area);
 		}
 
 		public override void CopyValuesFrom(IRegionData region)

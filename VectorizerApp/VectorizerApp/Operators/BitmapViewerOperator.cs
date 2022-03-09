@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graphics.Canvas;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,18 @@ namespace VectorizerApp.Operators
 
 		public void SetWindow(MainWindow mainWindow)
 		{
-			
+			StackPanel sp = new StackPanel();
+			mainWindow.SetRightPanel(sp);
+
+			mainWindow.regionizeButton.IsEnabled = true;
+			mainWindow.vectorizeButton.IsEnabled = true;
+
+			mainWindow.traceButton.IsEnabled = false;
+			mainWindow.simplifyButton.IsEnabled = false;
+			mainWindow.curveButton.IsEnabled = false;
+			mainWindow.saveButton.IsEnabled = false;
+			mainWindow.comparisonButton.IsEnabled = false;
+			mainWindow.saveButton.IsEnabled = false;
 		}
 
 		public bool PointerPressed(PointerArgs args)

@@ -18,19 +18,19 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="100" Orientation="Horizontal">
-            <Button x:Name="loadButton" Click="loadButton_Click" Margin="8,4">Otwórz</Button>
-            <Button x:Name="optionsButton" Click="optionsButton_Click" Margin="8,4">Opcje</Button>
-            <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4">
+            <Button x:Name="loadButton" Click="loadButton_Click" Margin="8,4" ToolTipService.ToolTip="Otwiera nowy plik rastrowy do przeprowadzania procesu wektoryzacji">Otwórz</Button>
+            <Button x:Name="optionsButton" Click="optionsButton_Click" Margin="8,4" ToolTipService.ToolTip="Opcje procesu wektoryzacji">Opcje</Button>
+            <Button x:Name="undoButton" Click="undoButton_Click" Margin="8,4" ToolTipService.ToolTip="Cofnij do poprzedniego ekranu">
                 <FontIcon Glyph="&#xE72B;"/>
             </Button>
-            <Button x:Name="regionizeButton" Click="regionizeButton_Click" Margin="8,4">Regionizuj</Button>
-            <Button x:Name="traceButton" Click="traceButton_Click" Margin="8,4">Trasuj</Button>
-            <Button x:Name="simplifyButton" Click="simplifyButton_Click" Margin="8,4">Uprość</Button>
-            <Button x:Name="curveButton" Click="curveButton_Click" Margin="8,4">Krzywe</Button>
-            <Button x:Name="vectorizeButton" Click="vectorizeButton_Click" Margin="8,4">Pełna wektoryzacja</Button>
-            <Button x:Name="comparisonButton" Click="comparisonButton_Click" Margin="8,4">Porównaj</Button>
-            <Button x:Name="comparison2Button" Click="comparison2Button_Click" Margin="8,4">Porównaj pliki</Button>
-            <Button x:Name="saveButton" Click="saveButton_Click" Margin="8,4">Zapisz</Button>
+            <Button x:FieldModifier="Public" x:Name="regionizeButton" IsEnabled="False" Click="regionizeButton_Click" Margin="8,4" ToolTipService.ToolTip="Pierwszy krok algorytmu. Wymaga nowo otwartego obrazka.">Regionizuj</Button>
+            <Button x:FieldModifier="Public" x:Name="traceButton" IsEnabled="False" Click="traceButton_Click" Margin="8,4" ToolTipService.ToolTip="Drugi krok algorytmu. Wymaga wykonanego kroku regionizacji.">Trasuj</Button>
+            <Button x:FieldModifier="Public" x:Name="simplifyButton" IsEnabled="False" Click="simplifyButton_Click" Margin="8,4" ToolTipService.ToolTip="Trzeci krok algorytmu. Wymaga wykonanego kroku trasowania.">Uprość</Button>
+            <Button x:FieldModifier="Public" x:Name="curveButton" IsEnabled="False" Click="curveButton_Click" Margin="8,4" ToolTipService.ToolTip="Ostatni krok algorytmu. Wymaga wykonania kroku uprość.">Aproksymuj</Button>
+            <Button x:FieldModifier="Public" x:Name="vectorizeButton" IsEnabled="False" Click="vectorizeButton_Click" Margin="8,4" ToolTipService.ToolTip="Wykonuje pełną wektoryzację aktualnie otwartego obrazu dla wybranych parametrów wektoryzacji.">Pełna wektoryzacja</Button>
+            <Button x:FieldModifier="Public" x:Name="comparisonButton" IsEnabled="False" Click="comparisonButton_Click" Margin="8,4" ToolTipService.ToolTip="Wymaga wcześniejszego przeprowadzenia wektoryzacji. Porównuje uzyskany obraz z oryginalnym.">Porównaj</Button>
+            <Button x:FieldModifier="Public" x:Name="comparison2Button" Click="comparison2Button_Click" Margin="8,4" ToolTipService.ToolTip="Pozwala porównać ze sobą dwa dowolne pliki. Pliki muszą być tego samego rozmiaru.">Porównaj pliki</Button>
+            <Button x:FieldModifier="Public" x:Name="saveButton" IsEnabled="False" Click="saveButton_Click" Margin="8,4" ToolTipService.ToolTip="Wymaga wcześniejszego przeprowadzenia wektoryzacji. Zapisz efekt w postaci pliku wektorowego.">Zapisz</Button>
         </StackPanel>
         
         <local:Viewer x:Name="viewer" Draw="Viewer_Draw" Grid.Row="1" Grid.ColumnSpan="100" PointerMoved="viewer_PointerMoved" PointerPressed="viewer_PointerPressed" PointerReleased="viewer_PointerReleased" PointerCanceled="viewer_PointerCanceled"/>

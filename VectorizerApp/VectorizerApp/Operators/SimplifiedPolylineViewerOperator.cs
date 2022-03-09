@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,7 +76,16 @@ namespace VectorizerApp.Operators
 
 		public void SetWindow(MainWindow mainWindow)
 		{
+			StackPanel sp = new StackPanel();
+			mainWindow.SetRightPanel(sp);
 
+			mainWindow.regionizeButton.IsEnabled = false;
+			mainWindow.traceButton.IsEnabled = false;
+			mainWindow.simplifyButton.IsEnabled = false;
+			mainWindow.curveButton.IsEnabled = true;
+			mainWindow.saveButton.IsEnabled = false;
+			mainWindow.comparisonButton.IsEnabled = false;
+			mainWindow.saveButton.IsEnabled = false;
 		}
 		public bool PointerPressed(PointerArgs args)
 		{

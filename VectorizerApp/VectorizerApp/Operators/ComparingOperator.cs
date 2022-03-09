@@ -42,7 +42,7 @@ namespace VectorizerApp.Operators
 
 			heatmap = compareImages(bitmap1, bitmap2, chosenSize);
 
-			var colormap = (from p in heatmap select Color.FromArgb(255, 255, (byte)(255 - p), (byte)(255 - p))).ToArray();
+			var colormap = (from p in heatmap select Color.FromArgb(255, 255, (byte)(255 - Math.Min(p * 4,255)), (byte)(255 - Math.Min(p * 4,255)))).ToArray();
 
 			heatmapBitmap = CanvasBitmap.CreateFromColors(viewer.Device, colormap, (int)bitmap1.SizeInPixels.Width, (int)bitmap1.SizeInPixels.Height);
 		}
@@ -110,6 +110,9 @@ namespace VectorizerApp.Operators
 		public void SetWindow(MainWindow mainWindow)
 		{
 			this.mainWindow = mainWindow;
+
+			mainWindow.saveButton.IsEnabled = false;
+			mainWindow.comparisonButton.IsEnabled = false;
 
 			StackPanel sp = new StackPanel();
 			mainWindow.SetRightPanel(sp);

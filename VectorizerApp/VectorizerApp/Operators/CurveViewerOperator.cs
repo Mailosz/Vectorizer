@@ -179,6 +179,17 @@ namespace VectorizerApp.Operators
 		{
 			this.mainWindow = mainWindow;
 
+			mainWindow.regionizeButton.IsEnabled = false;
+			mainWindow.traceButton.IsEnabled = false;
+			mainWindow.simplifyButton.IsEnabled = false;
+			mainWindow.curveButton.IsEnabled = false;
+			mainWindow.saveButton.IsEnabled = false;
+			mainWindow.comparisonButton.IsEnabled = false;
+			mainWindow.vectorizeButton.IsEnabled = false;
+
+			mainWindow.saveButton.IsEnabled = true;
+			mainWindow.comparisonButton.IsEnabled = true;
+
 			StackPanel sp = new StackPanel();
 			mainWindow.SetRightPanel(sp);
 

@@ -123,6 +123,11 @@ namespace VectorizerApp.Operators
 		{
 			this.mainWindow = mainWindow;
 
+			mainWindow.regionizeButton.IsEnabled = false;
+			mainWindow.traceButton.IsEnabled = true;
+
+			mainWindow.vectorizeButton.IsEnabled = false;
+
 			StackPanel sp = new StackPanel();
 			mainWindow.SetRightPanel(sp);
 

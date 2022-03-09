@@ -85,8 +85,14 @@ namespace VectorizerApp.Operators
 		public void SetWindow(MainWindow mainWindow)
 		{
 			this.mainWindow = mainWindow;
-
 			StackPanel sp = new StackPanel();
+
+			mainWindow.traceButton.IsEnabled = false;
+			mainWindow.simplifyButton.IsEnabled = true;
+			mainWindow.curveButton.IsEnabled = false;
+			mainWindow.saveButton.IsEnabled = false;
+			mainWindow.comparisonButton.IsEnabled = false;
+			mainWindow.vectorizeButton.IsEnabled = false;
 		}
 
 		public bool PointerPressed(PointerArgs args)

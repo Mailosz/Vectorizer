@@ -8,8 +8,8 @@
 
   <Identity
     Name="3baf7e84-b415-4a82-ab3b-6595429a32d7"
-    Publisher="CN=m2ilo"
-    Version="1.0.0.0" />
+    Publisher="CN=Miłosz Osadczuk"
+    Version="1.0.3.0" />
 
   <Properties>
     <DisplayName>VectorizerApp (Package)</DisplayName>

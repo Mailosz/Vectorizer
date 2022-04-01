@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
+    <PublishSingleFile>true</PublishSingleFile>
     <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>VectorizerApp</RootNamespace>
@@ -16,9 +17,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="0.8.2.23" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.3" />
-    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.3" />
-    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.3" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.6" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.6" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.6" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 

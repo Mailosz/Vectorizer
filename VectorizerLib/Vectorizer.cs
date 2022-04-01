@@ -98,6 +98,7 @@ namespace VectorizerLib
 					writer.WriteStartElement("path");
 					var mean = regions.Regions[region.Index].Mean;
 					writer.WriteAttributeString("fill", "rgba(" + (byte)mean[2] + "," + (byte)mean[1] + "," + (byte)mean[0] + "," + (byte)mean[3] + ")");
+					writer.WriteAttributeString("style", "fill:#" + ((byte)mean[2]).ToString("X2") + ((byte)mean[1]).ToString("X2") + ((byte)mean[0]).ToString("X2") + ";opacity" + (mean[3]/255f) + ")");
 
 					StringBuilder sb = new StringBuilder();
 					sb.Append("M");
@@ -138,6 +139,7 @@ namespace VectorizerLib
 				}
 				writer.WriteEndElement();
 				writer.Flush();
+				stream.SetLength(stream.Position);
 			}
 		}
 	}
